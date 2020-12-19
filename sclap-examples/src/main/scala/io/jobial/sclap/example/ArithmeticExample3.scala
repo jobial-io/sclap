@@ -2,20 +2,21 @@ package io.jobial.sclap.example
 
 import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
-import io.jobial.sclap.implicits._
+import io.jobial.sclap.core.{CommandLineArgSpec, SubcommandWithCommandLine}
+import io.jobial.sclap.example.ArithmeticExample.param
+
 
 object ArithmeticExample3 extends CommandLineApp {
 
   def operation(name: String, op: (Int, Int) => Int) =
-    subcommand(
-      name,
+    subcommand[Int](name) {
       for {
-        a <- opt[Int]("a").required
-        b <- opt[Int]("b").required
-      } yield IO(op(a, b))
-    )
+        a <- param[Int].required
+        b <- param[Int].required
+      } yield op(a, b)
+    }
 
-  def runWithProcessedArgs =
+  def run =
     for {
       subcommandResult <- subcommands(
         operation("add", _ + _),
@@ -24,4 +25,5 @@ object ArithmeticExample3 extends CommandLineApp {
         operation("div", _ / _)
       )
     } yield subcommandResult.map(println)
+
 }

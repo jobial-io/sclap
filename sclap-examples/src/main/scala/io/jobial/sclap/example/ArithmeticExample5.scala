@@ -1,25 +1,20 @@
 package io.jobial.sclap.example
 
-import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 import io.jobial.sclap.core.ArgumentValueParser
-import io.jobial.sclap.implicits._
+
 
 object ArithmeticExample5 extends CommandLineApp {
 
   def operation[T: ArgumentValueParser](name: String, op: (T, T) => T) =
-    subcommand(
-      name,
+    subcommand[T](name) {
       for {
         a <- param[T].required
         b <- param[T].required
-      } yield IO {
-        println(a + " " + b)
-        op(a, b)
-      }
-    )
+      } yield op(a, b)
+    }
 
-  def runWithProcessedArgs =
+  def run =
     for {
       subcommandResult <- subcommands(
         operation[Double]("add", _ + _),
@@ -28,4 +23,5 @@ object ArithmeticExample5 extends CommandLineApp {
         operation[Double]("div", _ / _)
       )
     } yield subcommandResult.map(println)
+
 }
