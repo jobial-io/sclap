@@ -3,13 +3,13 @@ package io.jobial.sclap
 import cats.effect.{ExitCode, IO, IOApp}
 import io.jobial.sclap.core.{CommandLine, UsageHelpRequested}
 
-trait CommandLineApp extends IOApp with CommandLineParser {
+trait CommandLineAppNoImplicits extends IOApp with CommandLineParserNoImplicits {
 
-  def runWithProcessedArgs: CommandLine[Any]
+  def run: CommandLine[Any]
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      result <- executeCommandLine(runWithProcessedArgs, args) handleErrorWith {
+      result <- executeCommandLine(run, args) handleErrorWith {
         case t: UsageHelpRequested =>
           IO(ExitCode.Success)
         case t =>

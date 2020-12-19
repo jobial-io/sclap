@@ -1,15 +1,14 @@
 package io.jobial.sclap.core
 
-import cats._
-import cats.implicits._
 import cats.effect.IO
-import cats.free.Free
 import cats.free.Free._
 import io.jobial.sclap.core.implicits.ioExtraOps
+
+import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 
-trait CommandLineParserSyntax {
+trait CommandLineParserDsl {
   this: Logging =>
 
   /**
@@ -52,6 +51,15 @@ trait CommandLineParserSyntax {
   def subcommand[T](name: String, commandLine: CommandLine[T]) =
     Subcommand(name, commandLine)
 
+//  def subcommand[T](name: String, commandLine: CommandWithCommandLine[T]) =
+//    Subcommand(name, commandLine.commandLine)
+
+  //  implicit def commandLineFromArgSpecInSubcommand[T](commandLine: CommandLineArgSpec[Future[T]]) =
+  //    CommandLineArgSpecInSubcommand[T](commandLine)
+  //
+  //  def subcommand[T](name: String, commandLineArgSpec: CommandLineArgSpec[Future[T]]) =
+  //    Subcommand(name, commandLineArgSpec)
+
   /**
    * Takes a non-empty list of subcommands and returns the IO result of the first one that returns a non-error result
    * when processing the arguments. For example,
@@ -83,14 +91,16 @@ trait CommandLineParserSyntax {
     }
 
   /**
-   * Starting point for a command line specification. The Command instance describes details that apply to the whole command,
+   * Starting point for a command line interface specification. The Command instance describes details that apply to the whole command
    * like header and description, for example. A Command instance itself does not fully specify the CLI, a CommandLine 
-   * has to be added to it to be able to function as a full command line spec. Example:
+   * has to be added to it to be able to function as a full command line spec. The CommandLine can be added by simply applying
+   * the command to a CommandLine instance. Example:
    *
    * command.header("My command") {
    * for {
    * level <- opt("level", "prod") ....
    * } yield ... 
+   * }
    * }
    *
    * @return
@@ -98,7 +108,24 @@ trait CommandLineParserSyntax {
   def command = Command()
 
   /**
-   * Return the full list of arguments as it was passed to the command. This is rarely needed and param (with a range) is 
+   * Starting point for a command line interface specification. The Command instance describes details that apply to the whole command
+   * like header and description, for example. A Command instance itself does not fully specify the CLI, a CommandLine 
+   * has to be added to it to be able to function as a full command line spec. The CommandLine can be added by simply applying
+   * the command to a CommandLine instance. Example:
+   *
+   * command.header("My command") {
+   * for {
+   * level <- opt("level", "prod") ....
+   * } yield ... 
+   * }
+   * }
+   *
+   * @return
+   */
+  def command(name: String) = Command(name = name)
+
+  /**
+   * Return the full list of arguments as it was passed on the command line. It is rarely needed and param (with a range) is 
    * usually preferred.
    *
    * @return
@@ -144,7 +171,7 @@ abstract class ArgumentValueParser[T: ClassTag] {
 
 object ArgumentValueParser {
 
-  def apply[A](implicit instance: ArgumentValueParser[A]): ArgumentValueParser[A] = instance
+  def apply[A](implicit instance: ArgumentValueParser[A]) = instance
 }
 
 abstract class ArgumentValuePrinter[T] {
@@ -154,7 +181,7 @@ abstract class ArgumentValuePrinter[T] {
 
 object ArgumentValuePrinter {
 
-  def apply[A](implicit instance: ArgumentValuePrinter[A]): ArgumentValuePrinter[A] = instance
+  def apply[A](implicit instance: ArgumentValuePrinter[A]) = instance
 }
 
 
@@ -165,7 +192,7 @@ trait CommandLineArgSpecA[A] {
 }
 
 abstract class CommandLineArgSpecWithArgA[A, P: ArgumentValueParser] extends CommandLineArgSpecA[A] {
-  val parser = implicitly[ArgumentValueParser[P]]
+  val parser = ArgumentValueParser[P]
 
 }
 
@@ -213,7 +240,7 @@ case class OptWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   def description(description: String) =
     copy(description = Some(description))
 
-  val defaultValuePrinter = implicitly[ArgumentValuePrinter[T]]
+  val defaultValuePrinter = ArgumentValuePrinter[T]
 }
 
 case class OptWithRequiredValue[T: ArgumentValueParser](
@@ -260,6 +287,9 @@ case class Param[T: ArgumentValueParser](
   def index(index: Int): Param[T] =
     copy(index = Some(index))
 
+  def description(description: String): Param[T] =
+    copy(description = Some(description))
+
   def paramLabel(label: String): Param[T] =
     copy(paramLabel = Some(label))
 
@@ -280,7 +310,7 @@ case class ParamWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   def index(index: Int): ParamWithDefaultValue[T] =
     copy(index = Some(index))
 
-  val defaultValuePrinter = implicitly[ArgumentValuePrinter[T]]
+  val defaultValuePrinter = ArgumentValuePrinter[T]
 }
 
 case class ParamWithRequiredValue[T: ArgumentValueParser](
@@ -319,18 +349,25 @@ case class Subcommand[A](
   def aliases(aliases: String*) =
     copy(aliases = Some(aliases))
 
-  def orElse[B](subcommand: Subcommand[B]) = {
+  def orElse[B](subcommand: Subcommand[B]) =
     for {
       r <- build
       q <- subcommand.build
     } yield r orElse q
-  }
 }
 
+case class CommandLineArgSpecInSubcommand[A](commandLine: CommandLine[A])
+
 case class Command(
+  name: String = sys.props.get("app.name").getOrElse("<main class>"),
   header: Option[String] = None,
-  description: Option[String] = None
+  description: Option[String] = None,
+  printDefaultValues: Boolean = true,
+  addDotToDescriptions: Boolean = true
 ) {
+
+  def name(name: String): Command =
+    copy(name = name)
 
   def header(header: String): Command =
     copy(header = Some(header))

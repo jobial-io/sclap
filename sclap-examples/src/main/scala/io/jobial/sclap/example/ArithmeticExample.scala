@@ -2,7 +2,6 @@ package io.jobial.sclap.example
 
 import io.jobial.sclap.CommandLineApp
 import cats.effect.IO
-import io.jobial.sclap.implicits._
 
 object ArithmeticExample extends CommandLineApp {
 
@@ -30,7 +29,7 @@ object ArithmeticExample extends CommandLineApp {
       b <- opt[Int]("b").required
     } yield IO(a / b)
 
-  def runWithProcessedArgs =
+  def run =
     for {
       addResult <- subcommand("add", add)
       subResult <- subcommand("sub", sub)
