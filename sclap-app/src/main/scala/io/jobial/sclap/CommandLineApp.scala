@@ -1,3 +1,5 @@
 package io.jobial.sclap
 
-trait CommandLineApp extends CommandLineAppNoImplicits with CommandLineParser
+trait CommandLineApp
+  extends CommandLineAppNoImplicits
+    with CommandLineParser

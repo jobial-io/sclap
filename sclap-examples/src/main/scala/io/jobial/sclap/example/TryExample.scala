@@ -2,17 +2,16 @@ package io.jobial.sclap.example
 
 import io.jobial.sclap.CommandLineApp
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.util.Try
 
 
-object FutureExample extends CommandLineApp {
+object TryExample extends CommandLineApp {
 
   def run =
     for {
       hello <- opt[String]("--hello")
-    } yield Future {
+    } yield Try {
       println(s"hello $hello")
     }
-    
+
 }

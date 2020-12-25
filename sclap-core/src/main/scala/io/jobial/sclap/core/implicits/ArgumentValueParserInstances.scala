@@ -34,6 +34,11 @@ trait ArgumentValueParserInstances {
       def parse(s: String) = s.toDouble
     }
 
+  implicit val bigDecimalArgumentValueParser =
+    new ArgumentValueParserFromMonoid[BigDecimal]() {
+      def parse(s: String) = BigDecimal(s)
+    }
+
   implicit val durationArgumentValueParser =
     new ArgumentValueParserFromMonoid[Duration]() {
       def parse(s: String) = Duration(s)

@@ -12,22 +12,23 @@ class CommandLineParserTest
   "opt without default value test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a")
+        a <- opt[String]("a").alias("long")
       } yield IO {
         a
       }
 
     runCommandLineTestCases(spec)(
       TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("--a", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)"))
+      TestCase(Seq("-a", "hello"), succeedWith(Some("hello"))),
+      TestCase(Seq("--long", "hello"), succeedWith(Some("hello"))),
+      TestCase(Seq("-a"), failCommandLineParsingWith("Missing required parameter for option '--long' (PARAM)"))
     )
   }
 
   "parsing opt with default value test" should behave like {
     val spec =
       for {
-        a <- opt("a", "hello")
+        a <- opt("--a", "hello")
       } yield IO {
         a
       }
@@ -43,8 +44,8 @@ class CommandLineParserTest
   "parsing multiple opts test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a")
-        b <- opt("b", "hello")
+        a <- opt[String]("--a")
+        b <- opt("--b", "hello")
       } yield IO {
         (a, b)
       }
@@ -135,13 +136,13 @@ class CommandLineParserTest
   "parsing subcommands test" should behave like {
     val subcommand1 =
       for {
-        a <- opt[String]("a")
+        a <- opt[String]("--a")
       } yield IO {
         a
       }
 
     val subcommand2 = for {
-      b <- opt("b", 1)
+      b <- opt("-b", 1)
     } yield IO {
       b
 
@@ -149,9 +150,9 @@ class CommandLineParserTest
 
     val spec =
       for {
-        c <- opt[String]("c")
-        s1 <- subcommand("s1", subcommand1)
-        s2 <- subcommand("s2", subcommand2).aliases("s3")
+        c <- opt[String]("--c")
+        s1 <- subcommand("s1")(subcommand1)
+        s2 <- subcommand("s2").aliases("s3")(subcommand2)
       } yield for {
         r <- s1 orElse s2
       } yield (c, r)
@@ -163,16 +164,16 @@ class CommandLineParserTest
       TestCase(Seq("s1", "--a", "hi"), succeedWith((None, Some("hi")))),
       TestCase(Seq("--c", "hi", "s1", "--a", "hi"), succeedWith((Some("hi"), Some("hi")))),
       TestCase(Seq("s2"), succeedWith((None, 1))),
-      TestCase(Seq("s2", "--b", "2"), succeedWith((None, 2))),
-      TestCase(Seq("--c", "hi", "s2", "--b", "3"), succeedWith((Some("hi"), 3)))
+      TestCase(Seq("s2", "-b", "2"), succeedWith((None, 2))),
+      TestCase(Seq("--c", "hi", "s2", "-b", "3"), succeedWith((Some("hi"), 3)))
     )
   }
 
   "parsing opt with standard extensions test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a").paramLabel("<a>")
-        b <- opt("b", 1).paramLabel("<b>")
+        a <- opt[String]("--a").paramLabel("<a>")
+        b <- opt("--b", 1).paramLabel("<b>")
       } yield IO {
         (a, b)
       }
@@ -189,7 +190,7 @@ class CommandLineParserTest
   "parsing required opt test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a").required.paramLabel("<a>")
+        a <- opt[String]("--a").required.paramLabel("<a>")
       } yield IO {
         a
       }
@@ -206,8 +207,8 @@ class CommandLineParserTest
   "parsing opt with the picocli builder directly specified through the impl specific extension test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a").withPicocliOptionSpecBuilder(_.defaultValue("hello").paramLabel("<a>"))
-        b <- opt("b", 1).withPicocliOptionSpecBuilder(_.paramLabel("<b>"))
+        a <- opt[String]("--a").withPicocliOptionSpecBuilder(_.defaultValue("hello").paramLabel("<a>"))
+        b <- opt("--b", 1).withPicocliOptionSpecBuilder(_.paramLabel("<b>"))
         //      p <- param[String]("p").withPicocliOptionSpecBuilder(_.defaultValue("hello"))
       } yield IO {
         (a, b)
@@ -226,7 +227,7 @@ class CommandLineParserTest
     val sub =
       command.header("A subcommand").description("This is a subcommand.") {
         for {
-          a <- opt[String]("a")
+          a <- opt[String]("--a")
         } yield IO {
           a
         }
@@ -235,8 +236,8 @@ class CommandLineParserTest
     val main =
       command.header("Main command with a subcommand").description("This is the main command.") {
         for {
-          b <- opt[String]("b")
-          s <- subcommand("s", sub)
+          b <- opt[String]("--b")
+          s <- subcommand("s")(sub)
         } yield for {
           r <- s
         } yield (b, r)
@@ -246,20 +247,18 @@ class CommandLineParserTest
       TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s")),
       TestCase(Seq("--c", "hello"), failCommandLineParsingWith("Unknown options: '--c', 'hello'")),
       TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with a subcommand
-Usage: <main class> [-hV] [--b=PARAM] [COMMAND]
+Usage: <main class> [-h] [--b=PARAM] [COMMAND]
 This is the main command.
       --b=PARAM
   -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
 Commands:
   s  A subcommand
 """)),
       TestCase(Seq("s", "--help"), succeedWith((None, None), Some("""A subcommand
-Usage: <main class> s [-hV] [--a=PARAM]
+Usage: <main class> s [-h] [--a=PARAM]
 This is a subcommand.
       --a=PARAM
   -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
 """), Some("")))
     )
   }
@@ -275,10 +274,9 @@ This is a subcommand.
     runCommandLineTestCases(main)(
       TestCase(Seq(), succeedWith("hello")),
       TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with no args
-Usage: <main class> [-hV]
+Usage: <main class> [-h]
 This is the main command.
-  -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
+  -h, --help   Show this help message and exit.
 """))
     )
   }
@@ -287,7 +285,7 @@ This is the main command.
     val main =
       command.header("Main command with no args").description("This is the main command.") {
         for {
-          a <- opt("a", 1)
+          a <- opt("--a", 1)
           b <- param[String].paramLabel("xxxx")
           args <- args
         } yield IO {
@@ -311,27 +309,43 @@ This is the main command.
         f <- opt[Float]("f", 1.0f)
         d <- opt[Double]("d", 1.0)
         g <- opt[Duration]("g", 1 second)
-        h <- opt[FiniteDuration]("h", 2 seconds)
+        h <- opt[FiniteDuration]("k", 2 seconds)
+        j <- opt[BigDecimal]("j", BigDecimal(1.0))
       } yield IO {
-        (s, b, i, l, f, d, g, h)
+        (s, b, i, l, f, d, g, h, j)
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds)))
+      TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
+      TestCase(Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: <main class> [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
+                    [-j=PARAM] [-k=PARAM] [-l=PARAM] [-s=PARAM]
+  -b           (default: true).
+  -d=PARAM     (default: 1.0).
+  -f=PARAM     (default: 1.0).
+  -g=PARAM     (default: 1 second).
+  -h, --help   Show this help message and exit.
+  -i=PARAM     (default: 1).
+  -j=PARAM     (default: 1.0).
+  -k=PARAM     (default: 2 seconds).
+  -l=PARAM     (default: 2).
+  -s=PARAM     (default: ).
+"""))
     )
   }
 
   "params of built-in types" should behave like {
     val spec =
       for {
-        s <- param[String].required
-        b <- param[Boolean].required
-        i <- param[Int].required
-        l <- param[Long].required
-        f <- param[Float].required
-        d <- param[Double].required
-        g <- param[Duration].required
-        h <- param[FiniteDuration].required
+        s <- param[String]("")
+        b <- param[Boolean](true)
+        i <- param[Int](1)
+        l <- param[Long](2)
+        f <- param[Float](3.0f)
+        d <- param[Double](4.0)
+        g <- param[Duration](1 second)
+        h <- param[FiniteDuration](2 seconds)
+        j <- param[BigDecimal](BigDecimal(1.0))
       } yield IO {
         (s, b, i, l, f, d, g, h)
       }
@@ -340,5 +354,112 @@ This is the main command.
       TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds)))
     )
   }
+
+  "turning off default help option" should behave like {
+    val main =
+      command.header("Main command").description("This is the main command.")
+        .help(false).commandLine {
+        for {
+          a <- opt("-a", 1)
+          b <- param[String].paramLabel("xxxx")
+          args <- args
+        } yield IO {
+          (a, b, args)
+        }
+      }
+
+    runCommandLineTestCases(main)(
+      TestCase(Seq(), succeedWith((1, None, List()))),
+      TestCase(Seq("-a", "2", "hello"), succeedWith((2, Some("hello"), List("-a", "2", "hello")))),
+      TestCase(Seq("--help"), failCommandLineParsingWith("Unknown option: '--help'"))
+    )
+  }
+
+  "adding version help option" should behave like {
+    val main =
+      command.header("Main command").description("This is the main command.")
+        .version("1.0").commandLine {
+        for {
+          a <- opt("-a", 1)
+          b <- param[String].paramLabel("xxxx")
+          args <- args
+        } yield IO {
+          (a, b, args)
+        }
+      }
+
+    runCommandLineTestCases(main)(
+      TestCase(Seq(), succeedWith((1, None, List()))),
+      TestCase(Seq("-a", "2", "hello"), succeedWith((2, Some("hello"), List("-a", "2", "hello")))),
+      TestCase(Seq("-h"), failWithUsageHelpRequested("""Main command
+Usage: <main class> [-hV] [-a=PARAM] xxxx
+This is the main command.
+      xxxx
+  -a=PARAM        (default: 1).
+  -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
+""")),
+      TestCase(Seq("--version"), failWithVersionHelpRequested("""1.0
+"""))
+    )
+  }
+
+  "clustering posix styled short options" should behave like {
+    val spec =
+      for {
+        create <- opt[Boolean]("-c")
+        verbose <- opt[Boolean]("-v")
+        file <- opt[String]("-f")
+      } yield IO {
+        (create, verbose, file)
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq(), succeedWith((None, None, None))),
+      TestCase(Seq("-c", "-v", "-f", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz")))),
+      TestCase(Seq("-cvf", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz"))))
+    )
+  }
+
+  "clustering posix styled short options turned off" should behave like {
+    val spec =
+      command.clusteredShortOptionsAllowed(false) {
+        for {
+          create <- opt[Boolean]("-c")
+          verbose <- opt[Boolean]("-v")
+          file <- opt[String]("-f")
+        } yield IO {
+          (create, verbose, file)
+        }
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq(), succeedWith((None, None, None))),
+      TestCase(Seq("-c", "-v", "-f", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz")))),
+      TestCase(Seq("-cvf", "file.tar.gz"), failCommandLineParsingWith("Unknown options: '-cvf', 'file.tar.gz'"))
+    )
+  }
+
+  "automatic prefixes turned off" should behave like {
+    val spec =
+      command.prefixLongOptionsWith(None).prefixShortOptionsWith(None) {
+        for {
+          a <- opt[String]("a").alias("long")
+        } yield IO {
+          a
+        }
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq(), succeedWith(None)),
+      TestCase(Seq("-a", "hello"), failCommandLineParsingWith("Unmatched arguments from index 0: '-a', 'hello'")),
+      TestCase(Seq("a", "hello"), succeedWith(Some("hello"))),
+      TestCase(Seq("--long", "hello"), failCommandLineParsingWith("Unmatched arguments from index 0: '--long', 'hello'")),
+      TestCase(Seq("long", "hello"), succeedWith(Some("hello"))),
+      TestCase(Seq("a"), failCommandLineParsingWith("Missing required parameter for option 'long' (PARAM)")),
+      TestCase(Seq("-a"), failCommandLineParsingWith("Unmatched argument at index 0: '-a'"))
+    )
+  }
+
 
 }

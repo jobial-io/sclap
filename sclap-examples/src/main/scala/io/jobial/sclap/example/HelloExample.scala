@@ -7,7 +7,7 @@ object HelloExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt[String]("hello")
+      hello <- opt[String]("--hello")
     } yield
       println(s"hello $hello")
       

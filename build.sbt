@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Jobial OÜ
+ * Copyright (c) 2020 Jobial OÜ.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("3.0.0-M2", "2.11.12", "2.12.12", "2.13.3")
+ThisBuild / version := "0.9.0"
 
-val CatsEffectVersion = "2.0.0"
+val CatsVersion = "2.0.0"
 
 lazy val root: Project = project
   .in(file("."))
@@ -30,9 +31,9 @@ lazy val `sclap-core` = project
   .in(file("sclap-core"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % "2.0.0",
-      "org.typelevel" %% "cats-effect" % CatsEffectVersion,
-      "org.typelevel" %% "cats-free" % CatsEffectVersion,
+      "org.typelevel" %% "cats-core" % CatsVersion,
+      "org.typelevel" %% "cats-effect" % CatsVersion,
+      "org.typelevel" %% "cats-free" % CatsVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
     )
   )
@@ -41,12 +42,10 @@ lazy val `sclap-picocli` = project
   .in(file("sclap-picocli"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % "2.0.0",
-      "org.typelevel" %% "cats-effect" % CatsEffectVersion,
-      "org.typelevel" %% "cats-free" % CatsEffectVersion,
-      "info.picocli" % "picocli" % "4.5.2",
-      "joda-time" % "joda-time" % "2.10.8",
-      "commons-lang" % "commons-lang" % "2.6"
+      "org.typelevel" %% "cats-core" % CatsVersion,
+      "org.typelevel" %% "cats-effect" % CatsVersion,
+      "org.typelevel" %% "cats-free" % CatsVersion,
+      "info.picocli" % "picocli" % "4.5.2"
     )
   )
   .dependsOn(`sclap-core`)
@@ -62,8 +61,4 @@ lazy val `sclap-app` = project
 
 lazy val `sclap-examples` = project
   .in(file("sclap-examples"))
-//  .settings(
-//    libraryDependencies ++= Seq(
-//    )
-//  )
   .dependsOn(`sclap-app`)

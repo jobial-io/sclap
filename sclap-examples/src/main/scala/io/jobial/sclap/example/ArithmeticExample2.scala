@@ -1,19 +1,17 @@
 package io.jobial.sclap.example
 
 import io.jobial.sclap.CommandLineApp
-import io.jobial.sclap.example.ArithmeticExample.param
 
 
 object ArithmeticExample2 extends CommandLineApp {
 
   def operation(name: String, op: (Int, Int) => Int) =
-    subcommand[Int](
-      name,
+    subcommand[Int](name) {
       for {
         a <- param[Int].required
         b <- param[Int].required
       } yield op(a, b)
-    )
+    }
 
   def run =
     for {

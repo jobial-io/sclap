@@ -67,14 +67,11 @@ trait CommandLineParserFutureTestBase
   "command line with subcommand that returns a future" should behave like {
     val counter = new AtomicInteger
 
-    val sub = subcommand[Int](
-      "sub",
-      {
-        for {
-          c <- opt[String]("c")
-        } yield futureForCounter(counter)
-      }
-    )
+    val sub = subcommand[Int]("sub") {
+      for {
+        c <- opt[String]("c")
+      } yield futureForCounter(counter)
+    }
 
     val spec: CommandLine[Int] =
       for {

@@ -18,7 +18,7 @@ class CommandLineNoImplicitsTest
 
   "opt without default value test" should behave like {
     val spec = for {
-      a <- opt[String]("a").build
+      a <- opt[String]("--a").build
     } yield IO {
       a
     }

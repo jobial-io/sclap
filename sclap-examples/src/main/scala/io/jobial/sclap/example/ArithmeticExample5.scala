@@ -7,13 +7,12 @@ import io.jobial.sclap.core.ArgumentValueParser
 object ArithmeticExample5 extends CommandLineApp {
 
   def operation[T: ArgumentValueParser](name: String, op: (T, T) => T) =
-    subcommand[T](
-      name,
+    subcommand[T](name) {
       for {
         a <- param[T].required
         b <- param[T].required
       } yield op(a, b)
-    )
+    }
 
   def run =
     for {

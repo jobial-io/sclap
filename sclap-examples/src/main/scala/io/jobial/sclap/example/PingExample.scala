@@ -7,7 +7,7 @@ import scala.concurrent.duration._
 object PingExample extends CommandLineApp {
 
   def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
-    println(s"pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
+    println(s"Pinging $host with $count packets, timeout: $timeout, ttl: $timeToLive...")
 
   def run =
     for {

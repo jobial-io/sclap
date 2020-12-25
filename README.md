@@ -1,6 +1,6 @@
 ### Sclap: Simple and Feature Rich Scala Command Line Apps
 
-An example speaks more than a thousand words:
+An example says more than a thousand words:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -18,22 +18,46 @@ object PingExample extends CommandLineApp {
       myPing(host, count, timeout, timeToLive)
 
   def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
-    println(s"pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
+    println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
 
 }
 ```
 
-which results in the command line usage:
+which produces the following command line usage message when you run it with --help:
 
 ```text
+Usage: <main class> [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] PARAM
+      PARAM
+      --count=PARAM     (default: 10).
+  -h, --help            Show this help message and exit.
+      --timeout=PARAM   (default: 5 seconds).
+      --ttl=PARAM
+```
 
+If you run it without any arguments, you will get the following on the standard error along with a non-zero
+exit code, as expected:
+
+```text
+Missing required parameter: 'PARAM'
+Usage: <main class> [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] PARAM
+      PARAM
+      --count=PARAM     (default: 10).
+  -h, --help            Show this help message and exit.
+      --timeout=PARAM   (default: 5 seconds).
+      --ttl=PARAM
+```
+
+Finally, if you run it with the argument "localhost":
+
+```text
+Pinging localhost with 10 packets, timeout: 5 seconds, ttl: None...
 ```
 
 Sclap is a purely functional, type safe, composable, easy to test command line argument parser library for Scala.
-Command line is still king and writing command line tools should be straightforward and painless, and Sclap gives you
-just that. Although Sclap is built on cats, cats-effect and cats-free in a purely functional style and combines best
-with the Cats ecosystem, you don't need to know any of those libraries to depend on it. Sclap can just as easily be used
-in non-Cats based or non-FP applications as well. It comes with:
+Command line is still king and writing command line tools should be straightforward and painless. Although Sclap is
+built on Cats, Cats Effect and Cats Free in a purely functional style and combines best with the Cats ecosystem, you
+don't need to know any of those libraries to depend on it. Sclap can just as easily be used in non-Cats based or non-FP
+applications as well. It comes with:
 
 * Automatic usage help generation
 * ANSI colours
@@ -47,7 +71,7 @@ in non-Cats based or non-FP applications as well. It comes with:
 * POSIX-style short option names (-a) with grouping (-abc)
 * GNU-style long option names (--opt, --opt=val)
 
-The motivation is to help promote Scala as an alternative for implementing command line applications and to make it
+The motivation is to help promote Scala as an alternative to implementing command line tools as scripts and to make it
 easier to expose existing functionality on the command line. Writing CLI tools should be a very simple exercise and
 Scala today is a better language for the task than most others (including scripting languages). Sclap aims to provide a
 well maintained and stable library that is feature rich enough to cover all the modern requirements.
@@ -139,20 +163,20 @@ A few things to note here:
 
 
 * In the yield part of the for {...}, you can return pretty much anything, Sclap will know how to deal with it including
-  error handling. You might have noticed though that the return type of the yield block is actually always an IO[_]. If
-  you are not familiar with the IO monad, all you need to know about it is that your application logic has to be
+  error handling. You might have noticed though that the return type of the yield block is actually always an `IO[_]`.
+  If you are not familiar with the IO monad, all you need to know about it is that your application logic has to be
   enclosed in an IO ('lifted' into an IO context) before it is returned in the yield part of the for comprehension in
   the run function. If your application logic results in something other than an IO, it gets implicitly '
-  lifted' into an IO[_] context. For example, if yield has code that returns an Int, it will implicitly become IO[Int],
-  taking care of any exceptions potentially thrown in the process. Also, if yield results in a Future or a Try, Sclap
-  will know how to lift them into an IO[_] context in a safe
+  lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly become IO[Int]
+  , taking care of any exceptions potentially thrown in the process. Also, if yield results in a Future or a Try, Sclap
+  will know how to lift them into an `IO[_]` context in a safe
   (referentially transparent) way, propagating and handling errors automatically. The IO context guarantees that your
   application logic will only run once the arguments have been parsed and validated safely.
 
 
 * Sclap will handle errors returned by your application code automatically: if your app throws an exception (or returns
   an error state in an IO, Future or Try), it will automatically be turned into a non-zero exit code. Alternatively, you
-  can return an IO[ExitStatus] to explicitly specify the exit code.
+  can return an `IO[ExitStatus]` to explicitly specify the exit code.
 
 #### Anatomy
 
@@ -189,10 +213,10 @@ def run =
 
 which is just a usual monadic expression using the CommandLineArgSpec Free monad mentioned above. The for part of the
 for comprehension binds the options and parameters to names, and the yield returns the application logic. As mentioned
-before, the return type of the yield part is always IO[_]. This is important: IO is pure and allows the library to
+before, the return type of the yield part is always `IO[_]`. This is important: IO is pure and allows the library to
 process the description safely, without any side-effects. To make it more convenient for applications that do not use
-Cats Effect, Sclap provides safe implicits to lift other return types (Future, Try or Any) into an IO context in a
-referentially transparent way (of course, the rest of your code will not become referentially transparent).
+Cats Effect, Sclap provides safe implicits to lift other common return types (Future, Try or Any) into an IO context in
+a referentially transparent way (of course, the rest of your code will not become referentially transparent).
 
 Sclap does not use any macros.
 
@@ -216,7 +240,7 @@ Sclap does not use any macros.
 
 #### Generating bash completion
 
-#### How to test your app
+#### Testing your app
 
 Sclap comes with the CommandLineAppTestHelper trait to help you write tests against your CLI specs:
 
@@ -230,7 +254,7 @@ Sclap is modular and it has the following components:
 * **sclap-app:** defines the CommandLineApp trait and other helper functionality.
 * **sclap-picocli:** the default Sclap parser implementation built on Picocli, which is a mature command line parsing
   library with a traditional, non-safe Java API. Fortunately it comes with no dependencies apart from the Java standard
-  library and exposes an API that can be built on.
+  library and exposes a reusable API.
 * **sclap-examples:** Example apps.
 
 Sclap relies on the Free monad class in cats-free to implement the DSL to describe the command line interface. The DSL

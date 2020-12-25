@@ -2,7 +2,7 @@ package io.jobial.sclap
 
 import cats.effect.IO
 import cats.implicits._
-import io.jobial.sclap.core.{CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested}
+import io.jobial.sclap.core.{CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested, VersionHelpRequested}
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.{Assertion, Succeeded}
 
@@ -55,8 +55,8 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
       testResult.result match {
         case Success(r) =>
           IO(logger.debug(r.toString)) *>
-            IO(out.map(out => assert(out eqv testResult.out))) *>
-            IO(err.map(err => assert(err eqv testResult.err))) *>
+            IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
+            IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
             IO(assert(result == r))
         case Failure(t) =>
           IO(logger.error("failed with:", t)) *>
@@ -71,8 +71,8 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
           case Success(r) =>
             IO(fail(s"expected failure, got $testResult"))
           case Failure(t) =>
-            IO(out.map(out => assert(out eqv testResult.out))) *>
-              IO(err.map(err => assert(err eqv testResult.err))) *>
+            IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
+              IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
               IO(check(t))
         }
       })
@@ -87,6 +87,9 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
 
   def failWithUsageHelpRequested[T](help: String) =
     failCommandLineParsingWithThrowable[T, UsageHelpRequested](_ => Succeeded, out = Some(help), None)
+
+  def failWithVersionHelpRequested[T](version: String) =
+    failCommandLineParsingWithThrowable[T, VersionHelpRequested](_ => Succeeded, out = Some(version), None)
 
   def failCommandLineParsingWith[T](message: String) =
     failCommandLineParsingWithThrowable[T, CommandLineParsingFailed](m => assert(m == message))
