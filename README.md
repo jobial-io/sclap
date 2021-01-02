@@ -1,4 +1,4 @@
-### Sclap: Simple and Feature Rich Scala Command Line Apps
+### Sclap: Scala Command Line Apps Made Simple
 
 An example says more than a thousand words:
 
