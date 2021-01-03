@@ -1,4 +1,4 @@
-### Sclap: Scala Command Line Apps Made Simple
+# Sclap: Scala Command Line Apps Made Simple
 
 An example says more than a thousand words:
 
@@ -59,22 +59,22 @@ If you run it with the argument "localhost", you should get:
 Pinging localhost with 10 packets, timeout: 5 seconds, ttl: None...
 ```
 
-Finally, if you provide one of the options, you will see something like:
+Finally, if you specify some options, you will see something like:
 
 ```text
-> PingExample --ttl=100 localhost
+> PingExample --count=2 --ttl=100 localhost
 
-Pinging localhost with 10 packets, timeout: 5 seconds, ttl: Some(100)...
+Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
 ```
 
 Of course, these examples assume that you have created an alias to or wrapped up your Scala app so that you can execute
 it on the command line as `PingExample`).
 
-#### Introduction
+## Introduction
 
-Sclap is a purely functional, type safe, composable, easy to test command line argument parser library for Scala.
-Command line is still king and writing command line tools should be straightforward and painless. Although Sclap is
-built on Cats, Cats Effect and Cats Free in a purely functional style and combines best with the Cats ecosystem, you
+**Sclap** is a purely functional, type safe, composable, easy to test command line argument parser for Scala. Command
+line is still king and writing command line tools should be straightforward and painless. Although **Sclap** is built on
+**Cats**, **Cats Effect** and **Cats Free** in a purely functional style and combines best with the Cats ecosystem, you
 don't need to know any of those libraries to depend on it. Sclap can be used seamlessly in non-Cats based or non-FP
 applications as well. It comes with:
 
@@ -95,7 +95,7 @@ easier to expose existing functionality on the command line. Writing CLI tools s
 Scala today is a better language for the task than most others (including scripting languages). Sclap aims to provide a
 well maintained and stable library that is feature rich enough to cover all the modern requirements.
 
-#### A very basic example...
+### A very basic example...
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -136,7 +136,7 @@ to your build.sbt or
 
 to pom.xml if you use Maven where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
 
-#### ...and a bit more detailed one
+### ...and a bit more detailed one
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -188,8 +188,7 @@ A few things to note here:
   an `IO[_]`. If you are not familiar with the IO monad, all you need to know about it is that your application logic
   has to be enclosed in an IO ('lifted' into an IO context) before it is returned in the yield part of the for
   comprehension in the run function. If your application logic results in something other than an IO, it gets
-  implicitly '
-  lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly
+  implicitly 'lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly
   become `IO[Int]`, taking care of any exceptions potentially thrown in the process. Also, if yield results in a Future
   or a Try, Sclap will know how to lift them into an `IO[_]` context in a safe
   (referentially transparent) way, propagating and handling errors automatically. The IO context guarantees that your
@@ -198,10 +197,178 @@ A few things to note here:
 
 * Sclap will handle errors returned by your application code automatically: if your app throws an exception (or returns
   an error state in an `IO`, `Future` or `Try`), it will automatically be turned into a non-zero exit code.
-  Alternatively, you can return an `IO[ExitStatus]` to explicitly specify the exit code (see `ExitStatus` in Cats
-  Effect).
+  Alternatively, you can return an `IO[ExitCode]` to explicitly specify the exit code (see `cats.effect.ExitCode` in
+  Cats Effect).
 
-#### Anatomy
+## Positional parameters and options
+
+## Command header and description
+
+## Subcommands
+
+## Error handling
+
+As explained before, your `run` function (either explicitly or implicitly) always takes this format:
+
+```scala
+import cats.effect.IO
+
+def run =
+  for {
+    _ <- opt(...)
+  } yield IO {
+    // app code
+  }
+```
+
+If the IO results in an error state, the default error handling is to print the error message and return a non-zero exit
+code:
+
+```scala
+import cats.effect.IO
+import io.jobial.sclap.CommandLineApp
+
+object ErrorExample extends CommandLineApp {
+
+  def run =
+    for {
+      hello <- opt("--hello", "world")
+    } yield
+      IO.raiseError(new RuntimeException("an error occurred..."))
+
+}
+```
+
+```
+> ErrorExample
+an error occurred...
+```
+
+### What if my code throws Exceptions?
+
+Since the application code is always wrapped in an IO, an exception thrown will result in an IO with an error state
+exactly the same way as above:
+
+```scala
+import io.jobial.sclap.CommandLineApp
+
+object ExceptionExample extends CommandLineApp {
+
+  def run =
+    for {
+      hello <- opt("--hello", "world")
+    } yield
+      throw new RuntimeException("an error occurred...")
+
+}
+```
+
+should execute like
+
+```
+> ExceptionExample
+an error occurred...
+```
+
+with a non-zero exit code. However, if you call it with --help, the application code will never run and the exception
+doesn't get thrown as expected:
+
+```
+> ExceptionExample --help
+Usage: ErrorExample [-h] [--hello=PARAM]
+  -h, --help          Show this help message and exit.
+      --hello=PARAM
+```
+
+### What if I want to use Future?
+
+You can return a Future seamlessly in the yield part of the run function:
+
+```scala
+import concurrent.Future
+
+def run =
+  for {
+    hello <- opt("--hello", "world")
+  } yield Future {
+    println(s"hello $hello")
+  }
+```
+
+Of course, the `Future` gets executed only if Sclap could parse the arguments correctly.
+
+Errors are handled as expected:
+
+```scala
+import concurrent.Future
+
+def run =
+  for {
+    hello <- opt("--hello", "world")
+  } yield Future {
+    throw new RuntimeException("there was an error...")
+  }
+```
+
+should run like
+
+```
+> HelloExample
+there was an error...
+```
+
+with a non-zero exit code.
+
+### How about returning a Try?
+
+You can return a Try as well:
+
+```scala
+import util.Try
+
+def run =
+  for {
+    hello <- opt("--hello", "world")
+  } yield Try {
+    println(s"hello $hello")
+  }
+```
+
+The behaviour is the same as for Future.
+
+## Custom type arguments
+
+Argument values are handled type safely in Sclap. Parsing and printing arguments of different types are done through
+the `ArgumentValueParser` and `ArgumentValuePrinter` type classes.
+
+## Accessing all the arguments
+
+If for some reason you need to access all the arguments as they were passed on the command line, you can use the args
+function:
+
+```scala
+def run =
+  for {
+    a <- args
+  } yield
+    println(a) // a is a Seq[String] with all the arguments
+```
+
+## Customizing the usage help format
+
+### Overriding the app name
+
+## Generating a bash or ZSH autocomplete script
+
+## Testing your app
+
+Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests against your CLI specs:
+
+## Further Examples
+
+## How does it work?
+
+### Anatomy
 
 Here are a few pointers on the internal structure of a command line description in Sclap. An application typically
 implements the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats
@@ -236,70 +403,46 @@ def run =
 ```
 
 which is just a usual monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
-for comprehension binds the options and parameters to names, and the yield returns the application logic. As mentioned
-before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the library to
-process the description safely, without any side-effects. To make it more convenient for applications that do not use
-Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Any`) into an IO
-context in a referentially transparent way (of course, the rest of your code will not become referentially transparent).
+for comprehension binds the options and parameters to names, and the yield section returns the application logic. As
+mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
+library to process the description safely, without any side-effects. To make it more convenient for applications that do
+not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Any`) into an
+IO context in a referentially transparent way (of course, the rest of your code will not become referentially
+transparent).
 
 Sclap does not rely on any macros.
 
-#### Parameters and Options
+### Modules
 
-#### Command header and description
-
-#### Subcommands
-
-#### What if I want to use Future?
-
-#### How about returning Try?
-
-#### What if my code throws Exceptions?
-
-#### Custom type arguments
-
-#### Accessing all arguments
-
-#### Customizing the usage help format
-
-#### Generating bash completion
-
-#### Testing your app
-
-Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests against your CLI specs:
-
-#### Further Examples
-
-#### How does it work?
-
-Sclap is modular and it has the following components:
+Sclap is modular with the following components:
 
 * **sclap-core:** defines the DSL, built on cats-free and cats-effect; the DSL is implementation independent, leaving it
   open for alternative parser implementations and making it more future proof in case the default parser impl (which
-  currently uses Picocli) becomes obsolete or unmaintained.
-* **sclap-app:** defines the CommandLineApp trait and other helper functionality.
+  currently uses Picocli) becomes obsolete or unmaintained. An implementor has to implement the `executeCommandLine`
+  function which takes the `CommandLine` description along with the command line args as arguments.
+* **sclap-app:** provides the `CommandLineApp` trait and other helper functionality.
 * **sclap-picocli:** the default Sclap parser implementation built on Picocli, which is a mature command line parsing
   library with a traditional, non-safe Java API. Fortunately it comes with no dependencies apart from the Java standard
-  library and exposes a reusable API.
+  library and exposes a fairly reusable API.
 * **sclap-examples:** Example apps.
 
-Sclap relies on the Free monad class in cats-free to implement the DSL to describe the command line interface. The DSL
+Sclap relies on the Free monad class from cats-free to implement the DSL to describe the command line interface. The DSL
 is used in two passes: the first pass builds the command line interface structure, which is then used in a second pass
-to parse the actual arguments passed to the app and bind the results to the values the monadic expressions, or to
+to parse the actual arguments passed to the app and bind the results to the values in the monadic expression, or to
 generate the command line usage text in case of a failure or if --help is requested. The application logic is
 represented as an IO monad, which comes from cats-effect. By describing the application logic in a referentially
 transparent manner, it is possible to evaluate the command line description multiple times without any side effects (
 like running actual application logic, for example).
 
-#### Implicits
+## Implicits
 
 Sclap relies on a few carefully designed implicits to make the syntax more concise. If you want to override the defaults
 or have an aversion to implicits, you can always choose to not include the built-in ones in your code by extending the
-CommandLineAppNoImplicits trait instead and cherry-picking the implicits you need separately. If you decide not to use
+`CommandLineAppNoImplicits` trait instead and cherry-pick the implicits you need separately. If you decide not to use
 any of the implicits provided by the library, the syntax becomes slightly more verbose but still manageable. Here is an
 example:
 
-#### Implementation dependent extensions
+## Implementation dependent extensions
 
 If you need to access the implementation specific features in Picocli for whatever reason, the sclap-picocli module
 provides extensions to Opts and Params that allow you to access the underlying Builder instances directly:
@@ -308,4 +451,4 @@ provides extensions to Opts and Params that allow you to access the underlying B
 
 ```
 
-This way you override or customize all aspects of the command line description if needed.
+This way you can override or customize any aspects of the underlying command line description if needed.
