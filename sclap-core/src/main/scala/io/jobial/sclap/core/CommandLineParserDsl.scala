@@ -397,7 +397,7 @@ case class Subcommand[A](
 
 case class SubcommandWithCommandLine[A](
   subcommand: Subcommand[A],
-  commandLine: CommandLine[A],
+  commandLine: CommandLine[A]
 ) extends CommandLineArgSpecA[IO[A]] {
 
   def orElse[B](subcommand: SubcommandWithCommandLine[B]) =

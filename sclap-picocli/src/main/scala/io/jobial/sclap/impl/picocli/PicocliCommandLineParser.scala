@@ -23,7 +23,7 @@ import picocli.CommandLine.Model.{OptionSpec, PositionalParamSpec, CommandSpec =
 import picocli.CommandLine.{DefaultExceptionHandler, IExceptionHandler2, IParseResultHandler2, ITypeConverter, ParseResult}
 
 import java.io.PrintStream
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 import scala.util.matching.Regex
@@ -51,8 +51,8 @@ trait PicocliCommandLineParser {
   case class CommandLineParsingContext(command: Command = Command(), picocliCommandSpec: PicocliCommandSpec = PicocliCommandSpec.create) {
 
     def updateCommand(command: Command) = {
-      picocliCommandSpec.options.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
-      picocliCommandSpec.options.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
+      picocliCommandSpec.options.asScala.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
+      picocliCommandSpec.options.asScala.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
       picocliCommandSpec.mixinStandardHelpOptions(true)
       new PicocliCommandLine(picocliCommandSpec)
       picocliCommandSpec.commandLine().setPosixClusteredShortOptionsAllowed(command.clusteredShortOptionsAllowed)
@@ -61,11 +61,11 @@ trait PicocliCommandLineParser {
         case Some(version) =>
           picocliCommandSpec.version(version)
         case None =>
-          picocliCommandSpec.options.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
+          picocliCommandSpec.options.asScala.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
       }
 
       if (!command.help)
-        picocliCommandSpec.options.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
+        picocliCommandSpec.options.asScala.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
 
       copy(command = command)
     }
@@ -352,7 +352,7 @@ trait PicocliCommandLineParser {
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              Option(commandSpec.positionalParameters.find(_.descriptionKey == descriptionKey).get.getValue[A])
+              Option(commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A])
             }
           case p @ ParamWithDefaultValue(_, _, _, _) =>
             State.modify[CommandLineExecutionContext](_.incrementParamCounter(p.toString)).inspect { context =>
@@ -360,7 +360,7 @@ trait PicocliCommandLineParser {
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              commandSpec.positionalParameters.find(_.descriptionKey == descriptionKey).get.getValue[A]
+              commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A]
             }
           case p @ ParamWithRequiredValue(_, _, _) =>
             State.modify[CommandLineExecutionContext](_.incrementParamCounter(p.toString)).inspect { context =>
@@ -368,10 +368,10 @@ trait PicocliCommandLineParser {
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              commandSpec.positionalParameters.find(_.descriptionKey == descriptionKey).get.getValue[A]
+              commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A]
             }
           case p @ ParamRange(param, _, _, _, _) =>
-            State.inspect(_ => commandSpec.positionalParameters.find(_.descriptionKey == System.identityHashCode(p).toString).get.getValue[A])
+            State.inspect(_ => commandSpec.positionalParameters.asScala.find(_.descriptionKey == System.identityHashCode(p).toString).get.getValue[A])
           case PicocliOpt(o, _) =>
             debug(s"getting option value ${o.name}")
             State.inspect(_ => Option(commandSpec.optionsMap.get(o.name).getValue[A]))

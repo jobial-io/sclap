@@ -21,51 +21,51 @@ import scala.reflect.ClassTag
 
 trait ArgumentValueParserInstances {
 
-  implicit val stringArgumentValueParser =
-    new ArgumentValueParserFromMonoid[String]() {
+  implicit val stringArgumentValueParser: ArgumentValueParserFromMonoid[String] =
+    new ArgumentValueParserFromMonoid[String] {
       def parse(s: String) = s
     }
 
-  implicit val intArgumentValueParser =
-    new ArgumentValueParserFromMonoid[Int]() {
+  implicit val intArgumentValueParser: ArgumentValueParserFromMonoid[Int] =
+    new ArgumentValueParserFromMonoid[Int] {
       def parse(s: String) = s.toInt
     }
 
-  implicit val longArgumentValueParser =
-    new ArgumentValueParserFromMonoid[Long]() {
+  implicit val longArgumentValueParser: ArgumentValueParserFromMonoid[Long] =
+    new ArgumentValueParserFromMonoid[Long] {
       def parse(s: String) = s.toLong
     }
 
-  implicit val floatArgumentValueParser =
-    new ArgumentValueParserFromMonoid[Float]() {
+  implicit val floatArgumentValueParser: ArgumentValueParserFromMonoid[Float] =
+    new ArgumentValueParserFromMonoid[Float] {
       def parse(s: String) = s.toFloat
     }
 
-  implicit val doubleArgumentValueParser =
-    new ArgumentValueParserFromMonoid[Double]() {
+  implicit val doubleArgumentValueParser: ArgumentValueParserFromMonoid[Double] =
+    new ArgumentValueParserFromMonoid[Double] {
       def parse(s: String) = s.toDouble
     }
 
-  implicit val bigDecimalArgumentValueParser =
-    new ArgumentValueParserFromMonoid[BigDecimal]() {
+  implicit val bigDecimalArgumentValueParser: ArgumentValueParserFromMonoid[BigDecimal] =
+    new ArgumentValueParserFromMonoid[BigDecimal] {
       def parse(s: String) = BigDecimal(s)
     }
 
-  implicit val durationArgumentValueParser =
-    new ArgumentValueParserFromMonoid[Duration]() {
+  implicit val durationArgumentValueParser: ArgumentValueParserFromMonoid[Duration] =
+    new ArgumentValueParserFromMonoid[Duration] {
       def parse(s: String) = Duration(s)
     }
 
-  implicit val finiteDurationArgumentValueParser =
-    new ArgumentValueParserFromMonoid[FiniteDuration]() {
+  implicit val finiteDurationArgumentValueParser: ArgumentValueParserFromMonoid[FiniteDuration] =
+    new ArgumentValueParserFromMonoid[FiniteDuration] {
       def parse(s: String) = Duration(s) match {
         case d: FiniteDuration =>
           d
       }
     }
 
-  implicit val booleanArgumentValueParser =
-    new ArgumentValueParser[Boolean]() {
+  implicit val booleanArgumentValueParser: ArgumentValueParser[Boolean] =
+    new ArgumentValueParser[Boolean] {
       def parse(s: String) = s.toBoolean
 
       override def empty = false

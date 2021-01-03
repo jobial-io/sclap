@@ -11,7 +11,7 @@ object PingExample extends CommandLineApp {
   def run =
     for {
       count <- opt("count", 10)
-      timeout <- opt("timeout", 5 seconds)
+      timeout <- opt("timeout", 5.seconds)
       timeToLive <- opt[Int]("ttl")
       host <- param[String].required
     } yield
