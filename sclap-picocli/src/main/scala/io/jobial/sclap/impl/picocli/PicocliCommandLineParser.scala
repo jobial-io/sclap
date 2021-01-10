@@ -14,21 +14,16 @@ package io.jobial.sclap.impl.picocli
 
 import cats.data.State
 import cats.effect.IO
-import cats.free._
 import cats.implicits._
-import cats.{Id, ~>, _}
+import cats.~>
 import io.jobial.sclap.core.{ArgumentValueParser, Logging, UsageHelpRequested, _}
-import picocli.{CommandLine => PicocliCommandLine}
 import picocli.CommandLine.Model.{OptionSpec, PositionalParamSpec, CommandSpec => PicocliCommandSpec}
-import picocli.CommandLine.{DefaultExceptionHandler, IExceptionHandler2, IParseResultHandler2, ITypeConverter, ParseResult}
+import picocli.CommandLine.{DefaultExceptionHandler, IExceptionHandler2, IParseResultHandler2, ParseResult}
+import picocli.{CommandLine => PicocliCommandLine}
 
 import java.io.PrintStream
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
-import scala.reflect.ClassTag
-import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
-import io.jobial.sclap.core.implicits._
 
 /**
  * An implementation of the Sclap command line parser using Picocli.
@@ -42,47 +37,34 @@ trait PicocliCommandLineParser {
     if (sclapLoggingEnabled)
       logger.debug(message)
 
-  def parse[A](commandLine: CommandLine[A], args: Seq[String]) = {
-    val result = commandLine.foldMap(parserCompiler(args)).run(CommandLineParsingContext().updateCommand(command))
+  def parse[A](commandLine: CommandLine[A], args: Seq[String]) =
+    parseCommandLine(CommandWithCommandLine(Command(name = defaultCommandName), commandLine).build, args, CommandLineParsingContext())
+
+  def parseCommandLine[A](commandLine: CommandLine[A], args: Seq[String], context: CommandLineParsingContext) = {
+    val result = commandLine.foldMap(parserCompiler(args)).run(context)
 
     result.value._1
   }
 
-  case class CommandLineParsingContext(command: Command = Command(), picocliCommandSpec: PicocliCommandSpec = PicocliCommandSpec.create) {
-
-    def updateCommand(command: Command) = {
-      picocliCommandSpec.options.asScala.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
-      picocliCommandSpec.options.asScala.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
-      picocliCommandSpec.mixinStandardHelpOptions(true)
-      new PicocliCommandLine(picocliCommandSpec)
-      picocliCommandSpec.commandLine().setPosixClusteredShortOptionsAllowed(command.clusteredShortOptionsAllowed)
-
-      command.version match {
-        case Some(version) =>
-          picocliCommandSpec.version(version)
-        case None =>
-          picocliCommandSpec.options.asScala.filter(o => o.names.head == "-V" || o.names.head == "--version").map(picocliCommandSpec.remove)
-      }
-
-      if (!command.help)
-        picocliCommandSpec.options.asScala.filter(o => o.names.head == "-h" || o.names.head == "--help").map(picocliCommandSpec.remove)
-
-      copy(command = command)
-    }
-
-    def updateSpec(update: PicocliCommandSpec => PicocliCommandSpec) =
-      copy(picocliCommandSpec = update(picocliCommandSpec))
-  }
-
-  type CommandLineParsingState[A] = State[CommandLineParsingContext, A]
-
   def typeConverterFor[T: ArgumentValueParser] =
     new PicocliCommandLine.ITypeConverter[T] {
-      override def convert(s: String) = ArgumentValueParser[T].parse(s)
+      override def convert(s: String) =
+        ArgumentValueParser[T].parse(s) match {
+          case Right(r) =>
+            r
+          case Left(t) =>
+            throw t
+        }
     }
 
-  def normalize(name: String, command: Command) =
-    if (name.size == 1) // short name
+  def defaultCommandName =
+    sys.props.get("app.name").orElse {
+      val className = getClass.getSimpleName
+      Some(if (className.endsWith("$")) className.substring(0, className.length - 1) else className)
+    }
+
+  def normalizeOptName(name: String, command: Command) =
+    if (name.size === 1) // short name
       command.prefixShortOptionsWith match {
         case Some(prefix) =>
           prefix + name
@@ -92,13 +74,45 @@ trait PicocliCommandLineParser {
     else
       command.prefixLongOptionsWith match {
         case Some(prefix) =>
-          if (name.startsWith(prefix) || command.prefixShortOptionsWith.map(prefix => name.startsWith(prefix)).getOrElse(false))
+          if (name.startsWith(prefix) || command.prefixShortOptionsWith.map(name.startsWith).getOrElse(false))
             name
           else
             prefix + name
         case None =>
           name
       }
+
+  case class CommandLineParsingContext(
+    command: Command = Command(),
+    picocliCommandSpec: PicocliCommandSpec = PicocliCommandSpec.create,
+    subcommand: Boolean = false
+  ) {
+
+    def updateCommand(command: Command) = {
+      picocliCommandSpec.options.asScala.filter(o => o.names.head === "-h" || o.names.head === "--help").map(picocliCommandSpec.remove)
+      picocliCommandSpec.options.asScala.filter(o => o.names.head === "-V" || o.names.head === "--version").map(picocliCommandSpec.remove)
+      picocliCommandSpec.mixinStandardHelpOptions(true)
+      new PicocliCommandLine(picocliCommandSpec)
+      picocliCommandSpec.commandLine().setPosixClusteredShortOptionsAllowed(command.clusteredShortOptionsAllowed)
+
+      command.version match {
+        case Some(version) =>
+          picocliCommandSpec.version(version)
+        case None =>
+          picocliCommandSpec.options.asScala.filter(o => o.names.head === "-V" || o.names.head === "--version").map(picocliCommandSpec.remove)
+      }
+
+      if (!command.help)
+        picocliCommandSpec.options.asScala.filter(o => o.names.head === "-h" || o.names.head === "--help").map(picocliCommandSpec.remove)
+
+      copy(command = command)
+    }
+
+    def updateSpec(update: PicocliCommandSpec => PicocliCommandSpec) =
+      copy(picocliCommandSpec = update(picocliCommandSpec))
+  }
+
+  type CommandLineParsingState[A] = State[CommandLineParsingContext, A]
 
   def parserCompiler(args: Seq[String]): CommandLineArgSpecA ~> CommandLineParsingState = new (CommandLineArgSpecA ~> CommandLineParsingState) {
 
@@ -111,19 +125,27 @@ trait PicocliCommandLineParser {
         val specBuilder = optionSpecBuilder(opt.name +: opt.aliases)
           .`type`(ArgumentValueParser[T].resultClass).converters(typeConverterFor[T])
         opt.paramLabel.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
+        opt.description.map(l => specBuilder.description(l)).getOrElse(specBuilder)
       }
 
-      def addOptionSpec[T](specBuilder: OptionSpec.Builder, empty: T) = {
+      def addOptionSpec[T](specBuilder: OptionSpec.Builder, empty: T) =
         State.modify[CommandLineParsingContext] { ctx =>
-          specBuilder.names(specBuilder.names.map(normalize(_,  ctx.command)): _*)
+          specBuilder.names(specBuilder.names.map(normalizeOptName(_, ctx.command)): _*)
 
+          // TODO: this logic is currently duplicated between Param and OptionSpecs because the common ArgSpec base class is private
           for {
             defaultValue <- Option(specBuilder.defaultValue)
           } yield
             if (ctx.command.printOptionDefaultValues) {
               val defaultValueString = s"(default: $defaultValue)"
               specBuilder.description(Option(specBuilder.description).getOrElse(Array()).lastOption
-                .map(_ + defaultValueString).getOrElse(defaultValueString))
+                .map { description =>
+                  val undottedDescription =
+                    if (description.endsWith(".") && ctx.command.addDotToDescriptions)
+                      description.substring(0, description.length - 1)
+                    else description
+                  undottedDescription + s" $defaultValueString"
+                }.getOrElse(defaultValueString))
             }
 
           def addDot(s: String) = if (s.endsWith(".")) s else s"$s."
@@ -138,10 +160,9 @@ trait PicocliCommandLineParser {
           debug(s"adding $spec")
           ctx.updateSpec(_.addOption(spec))
         }.inspect(_ => empty)
-      }
 
       def addOpt[T](opt: Opt[T], builder: OptionSpec.Builder => OptionSpec.Builder = identity[OptionSpec.Builder]) =
-        addOptionSpec(builder(optionSpecBuilderForOpt(opt)(opt.parser)), Option(opt.parser.empty))
+        addOptionSpec(builder(optionSpecBuilderForOpt(opt)(opt.parser)), none[T])
 
       def addOptWithDefaultValue[T](opt: OptWithDefaultValue[T], builder: OptionSpec.Builder => OptionSpec.Builder = identity[OptionSpec.Builder]) =
         addOptionSpec(builder(optionSpecBuilderForOpt(opt)(opt.parser).defaultValue(opt.defaultValuePrinter.print(opt.defaultValue))), opt.parser.empty)
@@ -149,20 +170,42 @@ trait PicocliCommandLineParser {
       def addOptWithRequiredValue[T](opt: OptWithRequiredValue[T], builder: OptionSpec.Builder => OptionSpec.Builder = identity[OptionSpec.Builder]) =
         addOptionSpec(builder(optionSpecBuilderForOpt(opt)(opt.parser).required(true)), opt.parser.empty)
 
-      def addParamSpec[T](specBuilder: PositionalParamSpec.Builder, empty: T) = {
+      def addParamSpec[T](specBuilder: PositionalParamSpec.Builder, empty: T) =
         State.modify[CommandLineParsingContext] { ctx =>
-          ctx.updateSpec { picocliCommandSpec =>
-            val paramNum = ctx.picocliCommandSpec.positionalParameters().size
-            if (specBuilder.index.isUnspecified) {
-              specBuilder.descriptionKey(s"${specBuilder.descriptionKey}_${paramNum}")
-              specBuilder.index(paramNum.toString)
+          for {
+            defaultValue <- Option(specBuilder.defaultValue)
+          } yield
+            if (ctx.command.printOptionDefaultValues) {
+              val defaultValueString = s"(default: $defaultValue)"
+              specBuilder.description(Option(specBuilder.description).getOrElse(Array()).lastOption
+                .map { description =>
+                  val undottedDescription =
+                    if (description.endsWith(".") && ctx.command.addDotToDescriptions)
+                      description.substring(0, description.length - 1)
+                    else description
+                  undottedDescription + s" $defaultValueString"
+                }.getOrElse(defaultValueString))
             }
-            val spec = specBuilder.build
-            debug(s"adding $spec")
-            ctx.picocliCommandSpec.addPositional(spec)
+
+          def addDot(s: String) = if (s.endsWith(".")) s else s"$s."
+
+          for {
+            description <- Option(specBuilder.description)
+          } yield
+            if (ctx.command.addDotToDescriptions) {
+              specBuilder.description((addDot(description.reverse.head) :: description.reverse.toList.tail).reverse: _*)
+            }
+
+          val paramNum = ctx.picocliCommandSpec.positionalParameters().size
+          if (specBuilder.index.isUnspecified) {
+            specBuilder.descriptionKey(s"${specBuilder.descriptionKey}_${paramNum}")
+            specBuilder.index(paramNum.toString)
           }
+
+          val spec = specBuilder.build
+          debug(s"adding $spec")
+          ctx.updateSpec(_.addPositional(spec))
         }.inspect(_ => empty)
-      }
 
       def paramSpecBuilder[T: ArgumentValueParser](param: ParamSpec[_, T]) = {
         val specBuilder = PositionalParamSpec.builder
@@ -173,7 +216,7 @@ trait PicocliCommandLineParser {
       }
 
       def addParam[T](param: Param[T], builder: PositionalParamSpec.Builder => PositionalParamSpec.Builder = identity[PositionalParamSpec.Builder]) =
-        addParamSpec(builder(paramSpecBuilder(param)(param.parser).required(false).index(param.index.map(_.toString).getOrElse(""))), Option(param.parser.empty))
+        addParamSpec(builder(paramSpecBuilder(param)(param.parser).required(false).index(param.index.map(_.toString).getOrElse(""))), none[T])
 
       def addParamWithDefaultValue[T](param: ParamWithDefaultValue[T], builder: PositionalParamSpec.Builder => PositionalParamSpec.Builder = identity[PositionalParamSpec.Builder]) =
         addParamSpec(builder(paramSpecBuilder(param)(param.parser).required(false).index(param.index.map(_.toString).getOrElse("")).defaultValue(param.defaultValuePrinter.print(param.defaultValue))), param.parser.empty)
@@ -205,17 +248,18 @@ trait PicocliCommandLineParser {
             .modify[CommandLineParsingContext] { ctx =>
               ctx.updateCommand(command)
             }
-            .modify(_.updateSpec { spec =>
-              if (!Option(spec.name).isDefined)
-                spec.name(command.name)
-              //spec.remove(spec.options())
-              command.header.map(spec.usageMessage.header(_))
-              command.description.map(spec.usageMessage.description(_))
-              spec
-            })
+            .modify { ctx =>
+              ctx.updateSpec { spec =>
+                if (!ctx.subcommand)
+                  command.name.orElse(ctx.command.name).map(spec.name(_))
+                command.header.map(spec.usageMessage.header(_))
+                command.description.map(spec.usageMessage.description(_))
+                spec
+              }
+            }
             .inspect(_ => IO())
         case SubcommandWithCommandLine(subcommand, subcommandLine) =>
-          val r = parse(subcommandLine, args).picocliCommandSpec
+          val r = parseCommandLine(subcommandLine, args, CommandLineParsingContext(subcommand = true)).picocliCommandSpec
           val picocliSubcommandLine = new PicocliCommandLine(r)
           subcommand.aliases.map(aliases => picocliSubcommandLine.getCommandSpec.aliases(aliases: _*))
           State.modify[CommandLineParsingContext](_.updateSpec(_.addSubcommand(subcommand.name, picocliSubcommandLine))).inspect(_ => IO())
@@ -229,7 +273,7 @@ trait PicocliCommandLineParser {
 
   case class CommandLineExecutionContext(command: Command, paramCounter: Int = 0) {
 
-    def incrementParamCounter(key: String) =
+    def incrementParamCounter =
       copy(paramCounter = paramCounter + 1)
   }
 
@@ -241,9 +285,12 @@ trait PicocliCommandLineParser {
     override def handleParseResult(parseResult: ParseResult): Try[ParseResult] = {
       super.handleParseResult(parseResult)
 
-      if (parseResult.isUsageHelpRequested)
+      val isUsageHelpRequested = parseResult.isUsageHelpRequested || parseResult.subcommands.asScala.exists(_.isUsageHelpRequested)
+      val isVersionHelpRequested = parseResult.isVersionHelpRequested || parseResult.subcommands.asScala.exists(_.isVersionHelpRequested)
+
+      if (isUsageHelpRequested)
         Failure(UsageHelpRequested())
-      else if (parseResult.isVersionHelpRequested)
+      else if (isVersionHelpRequested)
         Failure(VersionHelpRequested())
       else
         Success(parseResult)
@@ -335,43 +382,40 @@ trait PicocliCommandLineParser {
           case Opt(name, _, _, _) =>
             debug(s"getting option value $name")
             State.inspect { ctx =>
-//              println(normalize(name, ctx.command))
-//              println(ctx.command)
-//              println(commandSpec.optionsMap)
-              Option(commandSpec.optionsMap.get(normalize(name, ctx.command)).getValue[A])
+              Option(commandSpec.optionsMap.get(normalizeOptName(name, ctx.command)).getValue[A])
             }
           case OptWithDefaultValue(name, _, _, _, _) =>
             debug(s"getting option value $name")
-            State.inspect(ctx => commandSpec.optionsMap.get(normalize(name, ctx.command)).getValue[A])
+            State.inspect(ctx => commandSpec.optionsMap.get(normalizeOptName(name, ctx.command)).getValue[A])
           case OptWithRequiredValue(name, _, _, _) =>
             debug(s"getting option value $name")
-            State.inspect(ctx => commandSpec.optionsMap.get(normalize(name, ctx.command)).getValue[A])
+            State.inspect(ctx => commandSpec.optionsMap.get(normalizeOptName(name, ctx.command)).getValue[A])
           case p @ Param(_, _, _) =>
-            State.modify[CommandLineExecutionContext](_.incrementParamCounter(p.toString)).inspect { context =>
+            State.modify[CommandLineExecutionContext](_.incrementParamCounter).inspect { context =>
               val descriptionKey =
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              Option(commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A])
+              Option(commandSpec.positionalParameters.asScala.find(_.descriptionKey === descriptionKey).get.getValue[A])
             }
           case p @ ParamWithDefaultValue(_, _, _, _) =>
-            State.modify[CommandLineExecutionContext](_.incrementParamCounter(p.toString)).inspect { context =>
+            State.modify[CommandLineExecutionContext](_.incrementParamCounter).inspect { context =>
               val descriptionKey =
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A]
+              commandSpec.positionalParameters.asScala.find(_.descriptionKey === descriptionKey).get.getValue[A]
             }
           case p @ ParamWithRequiredValue(_, _, _) =>
-            State.modify[CommandLineExecutionContext](_.incrementParamCounter(p.toString)).inspect { context =>
+            State.modify[CommandLineExecutionContext](_.incrementParamCounter).inspect { context =>
               val descriptionKey =
                 if (p.index.isEmpty)
                   s"${p.toString}_${context.paramCounter - 1}"
                 else p.toString
-              commandSpec.positionalParameters.asScala.find(_.descriptionKey == descriptionKey).get.getValue[A]
+              commandSpec.positionalParameters.asScala.find(_.descriptionKey === descriptionKey).get.getValue[A]
             }
           case p @ ParamRange(param, _, _, _, _) =>
-            State.inspect(_ => commandSpec.positionalParameters.asScala.find(_.descriptionKey == System.identityHashCode(p).toString).get.getValue[A])
+            State.inspect(_ => commandSpec.positionalParameters.asScala.find(_.descriptionKey === System.identityHashCode(p).toString).get.getValue[A])
           case PicocliOpt(o, _) =>
             debug(s"getting option value ${o.name}")
             State.inspect(_ => Option(commandSpec.optionsMap.get(o.name).getValue[A]))
@@ -397,11 +441,11 @@ trait PicocliCommandLineParser {
 }
 
 case class PicocliOpt[T: ArgumentValueParser](opt: Opt[T], builder: OptionSpec.Builder => OptionSpec.Builder)
-  extends CommandLineArgSpecWithArgA[Option[T], T]
+  extends CommandLineArgSpecAWithValueParser[Option[T], T]
 
 case class PicocliOptWithDefaultValue[T: ArgumentValueParser](opt: OptWithDefaultValue[T], builder: OptionSpec.Builder => OptionSpec.Builder)
-  extends CommandLineArgSpecWithArgA[T, T]()
+  extends CommandLineArgSpecAWithValueParser[T, T]()
 
 case class PicocliOptWithRequiredValue[T: ArgumentValueParser](opt: OptWithRequiredValue[T], builder: OptionSpec.Builder => OptionSpec.Builder)
-  extends CommandLineArgSpecWithArgA[T, T]()
+  extends CommandLineArgSpecAWithValueParser[T, T]()
 

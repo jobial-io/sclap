@@ -23,16 +23,27 @@ trait CommandLineParserImplicits {
 
   implicit def buildCommandLineArgSpec[A](spec: CommandLineArgSpecA[A]) = spec.build
 
-  implicit def commandLineFromIO[A](result: IO[A]) = NoSpec[A](result).build
-
   implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) =
     IO.fromFuture(IO(f))(IO.contextShift(ec))
 
   implicit def fromTry[A](t: => Try[A]): IO[A] =
     IO().flatMap(_ => IO.fromTry(t))
 
+  implicit def fromEither[A](e: => Either[Throwable, A]): IO[A] =
+    IO().flatMap(_ => IO.fromEither(e))
+
   implicit def fromAny[A](a: => A): IO[A] =
     IO(a)
+
+  implicit def commandLineFromIO[A](result: IO[A]) = NoSpec[A](result).build
+
+  implicit def commandLineFromFuture[A](result: => Future[A])(implicit ec: ExecutionContext) = NoSpec[A](result).build
+
+  implicit def commandLineFromTry[A](result: => Try[A]) = NoSpec[A](result).build
+
+  implicit def commandLineFromEither[A](result: => Either[Throwable, A]) = NoSpec[A](result).build
+  
+  //TODO: shouldn't we have a commandLineFromAny here?
 
   final class IOExtraOps[A](val a: IO[A]) {
     def orElse[B >: A](b: IO[B]) =

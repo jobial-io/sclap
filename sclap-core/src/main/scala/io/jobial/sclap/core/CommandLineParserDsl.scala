@@ -12,6 +12,7 @@
  */
 package io.jobial.sclap.core
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.free.Free._
 import io.jobial.sclap.core.implicits.ioExtraOps
@@ -35,6 +36,9 @@ trait CommandLineParserDsl {
   def opt[T: ArgumentValueParser](name: String) =
     Opt[T](name)
 
+  def opt[T: ArgumentValueParser](names: NonEmptyList[String]) =
+    Opt[T](names.head).aliases(names.tail: _*)
+
   /**
    * Specifies a command line option with the given name and a default value if not specified on the command line. The
    * result is of type T because it is always present (either a value is specified by the caller or the default
@@ -47,6 +51,9 @@ trait CommandLineParserDsl {
    */
   def opt[T: ArgumentValueParser : ArgumentValuePrinter](name: String, defaultValue: T) =
     OptWithDefaultValue(name, defaultValue)
+
+  def opt[T: ArgumentValueParser : ArgumentValuePrinter](names: NonEmptyList[String], defaultValue: T) =
+    OptWithDefaultValue(names.head, defaultValue).aliases(names.tail: _*)
 
   def param[T: ArgumentValueParser] =
     Param[T]()
@@ -128,7 +135,7 @@ trait CommandLineParserDsl {
    *
    * @return
    */
-  def command(name: String) = Command(name = name)
+  def command(name: String) = Command(name = Some(name))
 
   /**
    * Return the full list of arguments as it was passed on the command line. It is rarely needed and param (with a range) is 
@@ -163,7 +170,7 @@ abstract class ArgumentValueParser[T: ClassTag] {
   /**
    * Parse String into type T.
    */
-  def parse(s: String): T
+  def parse(value: String): Either[Throwable, T]
 
   /**
    * The value to use in the first parsing phase when the AST for the command line is built.
@@ -190,19 +197,18 @@ object ArgumentValuePrinter {
   def apply[A](implicit instance: ArgumentValuePrinter[A]) = instance
 }
 
-
 trait CommandLineArgSpecA[A] {
 
   def build: CommandLineArgSpec[A] =
     liftF[CommandLineArgSpecA, A](this)
 }
 
-abstract class CommandLineArgSpecWithArgA[A, P: ArgumentValueParser] extends CommandLineArgSpecA[A] {
+abstract class CommandLineArgSpecAWithValueParser[A, P: ArgumentValueParser] extends CommandLineArgSpecA[A] {
 
   val parser = ArgumentValueParser[P]
 }
 
-abstract class OptSpec[A, P: ArgumentValueParser] extends CommandLineArgSpecWithArgA[A, P] {
+abstract class OptSpec[A, P: ArgumentValueParser] extends CommandLineArgSpecAWithValueParser[A, P] {
 
   def name: String
 
@@ -288,7 +294,7 @@ case class OptWithRequiredValue[T: ArgumentValueParser](
     copy(aliases = values)
 }
 
-abstract class ParamSpec[A, T: ArgumentValueParser] extends CommandLineArgSpecWithArgA[A, T] {
+abstract class ParamSpec[A, T: ArgumentValueParser] extends CommandLineArgSpecAWithValueParser[A, T] {
 
   def paramLabel: Option[String]
 
@@ -339,6 +345,12 @@ case class ParamWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   def index(value: Int): ParamWithDefaultValue[T] =
     copy(index = Some(value))
 
+  def description(value: String): ParamWithDefaultValue[T] =
+    copy(description = Some(value))
+
+  def paramLabel(value: String): ParamWithDefaultValue[T] =
+    copy(paramLabel = Some(value))
+
   val defaultValuePrinter = ArgumentValuePrinter[T]
 }
 
@@ -350,6 +362,12 @@ case class ParamWithRequiredValue[T: ArgumentValueParser](
 
   def index(value: Int): ParamWithRequiredValue[T] =
     copy(index = Some(value))
+
+  def description(value: String): ParamWithRequiredValue[T] =
+    copy(description = Some(value))
+
+  def paramLabel(value: String): ParamWithRequiredValue[T] =
+    copy(paramLabel = Some(value))
 }
 
 case class ParamRange[T: ArgumentValueParser](
@@ -410,7 +428,7 @@ case class SubcommandWithCommandLine[A](
 case class CommandLineArgSpecInSubcommand[A](commandLine: CommandLine[A])
 
 case class Command(
-  name: String = sys.props.get("app.name").getOrElse("<main class>"),
+  name: Option[String] = None,
   header: Option[String] = None,
   description: Option[String] = None,
   printOptionDefaultValues: Boolean = true,
@@ -423,7 +441,7 @@ case class Command(
 ) {
 
   def name(value: String): Command =
-    copy(name = value)
+    copy(name = Some(value))
 
   def header(value: String): Command =
     copy(header = Some(value))

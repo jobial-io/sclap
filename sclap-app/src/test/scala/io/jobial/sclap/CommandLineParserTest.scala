@@ -13,9 +13,12 @@
 package io.jobial.sclap
 
 import cats.effect.IO
+import io.jobial.sclap.core.{ArgumentValueParser, ArgumentValuePrinter}
 import org.scalatest.flatspec.AsyncFlatSpec
 
+import java.time.LocalDate
 import scala.concurrent.duration._
+import scala.util.Try
 
 class CommandLineParserTest
   extends AsyncFlatSpec
@@ -53,6 +56,34 @@ class CommandLineParserTest
     )
   }
 
+  "parsing opt with description test" should behave like {
+    val spec =
+      for {
+        a <- opt("a", "hello").description("This is option a.")
+        b <- opt("b", "hello").description("This is option b")
+        c <- opt[String]("c").description("This is option c.")
+        d <- opt[String]("d").description("This is option d")
+      } yield IO {
+        (a, b, c, d)
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq(), succeedWith(("hello", "hello", None, None))),
+      TestCase(Seq("-a", "hi"), succeedWith(("hi", "hello", None, None))),
+      TestCase(Seq("-b", "hi"), succeedWith(("hello", "hi", None, None))),
+      TestCase(Seq("-a", "hi", "-b", "hi"), succeedWith(("hi", "hi", None, None))),
+      TestCase(Seq("-c", "hi"), succeedWith(("hello", "hello", Some("hi"), None))),
+      TestCase(Seq("-d", "hi"), succeedWith(("hello", "hello", None, Some("hi")))),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [-a=PARAM] [-b=PARAM] [-c=PARAM] [-d=PARAM]
+  -a=PARAM     This is option a (default: hello).
+  -b=PARAM     This is option b (default: hello).
+  -c=PARAM     This is option c.
+  -d=PARAM     This is option d.
+  -h, --help   Show this help message and exit.
+"""))
+    )
+  }
+
   "parsing multiple opts test" should behave like {
     val spec =
       for {
@@ -74,29 +105,46 @@ class CommandLineParserTest
     val spec =
       for {
         a <- param[String]
+        b <- param[String].paramLabel("PARAM1")
+        c <- param[String].paramLabel("PARAM2").description("This is PARAM2.")
       } yield IO {
-        a
+        (a, b, c)
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("hi", "hello"), failCommandLineParsingWith("Unmatched argument at index 1: 'hello'"))
+      TestCase(Seq(), succeedWith((none[String], none[String], none[String]))),
+      TestCase(Seq("hello"), succeedWith((Some("hello"), None, None))),
+      TestCase(Seq("hello", "hi"), succeedWith((Some("hello"), Some("hi"), None))),
+      TestCase(Seq("hello", "hi", "ola"), succeedWith((Some("hello"), Some("hi"), Some("ola")))),
+      TestCase(Seq("hello", "hi", "ola", "oi"), failCommandLineParsingWith("Unmatched argument at index 3: 'oi'")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      PARAM
+      PARAM1
+      PARAM2   This is PARAM2.
+  -h, --help   Show this help message and exit.
+"""))
     )
   }
 
   "parsing param with default value test" should behave like {
     val spec =
       for {
-        a <- param[String].defaultValue("x")
-        b <- param[String].defaultValue("y")
+        a <- param("x")
+        b <- param("y").paramLabel("PARAM1")
+        c <- param[String].defaultValue("z").paramLabel("PARAM2").description("This is PARAM2.")
       } yield IO {
-        a + b
+        a + b + c
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith("xy")),
-      TestCase(Seq("1", "2"), succeedWith("12"))
+      TestCase(Seq(), succeedWith("xyz")),
+      TestCase(Seq("1", "2"), succeedWith("12z")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      PARAM    (default: x).
+      PARAM1   (default: y).
+      PARAM2   This is PARAM2 (default: z).
+  -h, --help   Show this help message and exit.
+"""))
     )
   }
 
@@ -104,14 +152,22 @@ class CommandLineParserTest
     val spec =
       for {
         a <- param[String].required
-        b <- param[String].required
+        b <- param[String].required.paramLabel("PARAM1")
+        c <- param[String].required.paramLabel("PARAM2").description("This is PARAM2")
       } yield IO {
-        a + b
+        a + b + c
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), failCommandLineParsingWith("Missing required parameters: 'PARAM', 'PARAM'")),
-      TestCase(Seq("1", "2"), succeedWith("12"))
+      TestCase(Seq(), failCommandLineParsingWith("Missing required parameters: 'PARAM', 'PARAM1', 'PARAM2'")),
+      TestCase(Seq("1", "2"), failCommandLineParsingWith("Missing required parameter: 'PARAM2'")),
+      TestCase(Seq("1", "2", "3"), succeedWith("123")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      PARAM
+      PARAM1
+      PARAM2   This is PARAM2.
+  -h, --help   Show this help message and exit.
+"""))
     )
   }
 
@@ -259,19 +315,19 @@ class CommandLineParserTest
       TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s")),
       TestCase(Seq("--c", "hello"), failCommandLineParsingWith("Unknown options: '--c', 'hello'")),
       TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with a subcommand
-Usage: <main class> [-h] [--b=PARAM] [COMMAND]
+Usage: CommandLineParserTest [-h] [--b=PARAM] [COMMAND]
 This is the main command.
       --b=PARAM
   -h, --help      Show this help message and exit.
 Commands:
   s  A subcommand
 """)),
-      TestCase(Seq("s", "--help"), succeedWith((None, None), Some("""A subcommand
-Usage: <main class> s [-h] [--a=PARAM]
+      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand
+Usage: CommandLineParserTest s [-h] [--a=PARAM]
 This is a subcommand.
       --a=PARAM
   -h, --help      Show this help message and exit.
-"""), Some("")))
+"""))
     )
   }
 
@@ -286,7 +342,7 @@ This is a subcommand.
     runCommandLineTestCases(main)(
       TestCase(Seq(), succeedWith("hello")),
       TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with no args
-Usage: <main class> [-h]
+Usage: CommandLineParserTest [-h]
 This is the main command.
   -h, --help   Show this help message and exit.
 """))
@@ -330,8 +386,8 @@ This is the main command.
     runCommandLineTestCases(spec)(
       TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
       TestCase(Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: <main class> [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
-                    [-j=PARAM] [-k=PARAM] [-l=PARAM] [-s=PARAM]
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
+                             [-j=PARAM] [-k=PARAM] [-l=PARAM] [-s=PARAM]
   -b           (default: true).
   -d=PARAM     (default: 1.0).
   -f=PARAM     (default: 1.0).
@@ -359,11 +415,11 @@ This is the main command.
         h <- param[FiniteDuration](2 seconds)
         j <- param[BigDecimal](BigDecimal(1.0))
       } yield IO {
-        (s, b, i, l, f, d, g, h)
+        (s, b, i, l, f, d, g, h, j)
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds)))
+      TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds", "3.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(3.0))))
     )
   }
 
@@ -404,7 +460,7 @@ This is the main command.
       TestCase(Seq(), succeedWith((1, None, List()))),
       TestCase(Seq("-a", "2", "hello"), succeedWith((2, Some("hello"), List("-a", "2", "hello")))),
       TestCase(Seq("-h"), failWithUsageHelpRequested("""Main command
-Usage: <main class> [-hV] [-a=PARAM] xxxx
+Usage: CommandLineParserTest [-hV] [-a=PARAM] xxxx
 This is the main command.
       xxxx
   -a=PARAM        (default: 1).
@@ -473,5 +529,77 @@ This is the main command.
     )
   }
 
+  "setting command name" should behave like {
+    val sub =
+      command.header("A subcommand.").description("This is a subcommand.") {
+        for {
+          a <- opt[String]("a")
+        } yield IO {
+          a
+        }
+      }
 
+    val spec =
+      command("main") {
+        for {
+          c <- opt[String]("c")
+          s <- subcommand("s")(sub)
+        } yield for {
+          r <- s
+        } yield (c, r)
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: main [-h] [-c=PARAM] [COMMAND]
+  -c=PARAM
+  -h, --help   Show this help message and exit.
+Commands:
+  s  A subcommand.
+""")),
+      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand.
+Usage: main s [-h] [-a=PARAM]
+This is a subcommand.
+  -a=PARAM
+  -h, --help   Show this help message and exit.
+"""))
+    )
+  }
+
+  "parsing custom argument types" should behave like {
+    val now = LocalDate.now
+
+    implicit val parser = new ArgumentValueParser[LocalDate] {
+      def parse(value: String) =
+        Try(LocalDate.parse(value)).toEither
+
+      def empty: LocalDate =
+        now
+    }
+
+    implicit val printer = new ArgumentValuePrinter[LocalDate] {
+      def print(value: LocalDate) =
+        value.toString
+    }
+
+    val spec =
+      for {
+        d <- opt("date", now).description("The date")
+      } yield IO {
+        println(s"date: $d")
+      }
+
+    runCommandLineTestCases(spec)(
+      TestCase(Seq(), succeedWith(now)),
+      TestCase(Seq("--date", "2021-01-20"), succeedWith(LocalDate.parse("2021-01-20"))),
+      TestCase(Seq("--date", "2021"), failCommandLineParsingWith("Invalid value for option '--date': cannot convert '2021' to LocalDate (java.time.format.DateTimeParseException: Text '2021' could not be parsed at index 4)")),
+      TestCase(Seq("-h"), failWithUsageHelpRequested(s"""Usage: CommandLineParserTest [-h] [--date=PARAM]
+      --date=PARAM   The date (default: ${now.toString}).
+  -h, --help         Show this help message and exit.
+"""))
+    )
+  }
+
+  // TODO: add test for Try, Either, Any
+
+  // TODO: add test for subcommand --help
 }

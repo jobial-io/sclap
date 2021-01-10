@@ -18,55 +18,72 @@ import cats.implicits._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
+import scala.util.{Failure, Success, Try}
 
 trait ArgumentValueParserInstances {
 
+  /**
+   * This is only needed for Scala 2.11 compatibility.
+   *
+   * @param t
+   * @tparam T
+   */
+  implicit class TryExtension[T](t: Try[T]) {
+
+    def toEither = t match {
+      case Success(value) =>
+        Right(value)
+      case Failure(t) =>
+        Left(t)
+    }
+  }
+
   implicit val stringArgumentValueParser: ArgumentValueParserFromMonoid[String] =
     new ArgumentValueParserFromMonoid[String] {
-      def parse(s: String) = s
+      def parse(s: String) = Right(s)
     }
 
   implicit val intArgumentValueParser: ArgumentValueParserFromMonoid[Int] =
     new ArgumentValueParserFromMonoid[Int] {
-      def parse(s: String) = s.toInt
+      def parse(s: String) = Try(s.toInt).toEither
     }
 
   implicit val longArgumentValueParser: ArgumentValueParserFromMonoid[Long] =
     new ArgumentValueParserFromMonoid[Long] {
-      def parse(s: String) = s.toLong
+      def parse(s: String) = Try(s.toLong).toEither
     }
 
   implicit val floatArgumentValueParser: ArgumentValueParserFromMonoid[Float] =
     new ArgumentValueParserFromMonoid[Float] {
-      def parse(s: String) = s.toFloat
+      def parse(s: String) = Try(s.toFloat).toEither
     }
 
   implicit val doubleArgumentValueParser: ArgumentValueParserFromMonoid[Double] =
     new ArgumentValueParserFromMonoid[Double] {
-      def parse(s: String) = s.toDouble
+      def parse(s: String) = Try(s.toDouble).toEither
     }
 
   implicit val bigDecimalArgumentValueParser: ArgumentValueParserFromMonoid[BigDecimal] =
     new ArgumentValueParserFromMonoid[BigDecimal] {
-      def parse(s: String) = BigDecimal(s)
+      def parse(s: String) = Try(BigDecimal(s)).toEither
     }
 
   implicit val durationArgumentValueParser: ArgumentValueParserFromMonoid[Duration] =
     new ArgumentValueParserFromMonoid[Duration] {
-      def parse(s: String) = Duration(s)
+      def parse(s: String) = Try(Duration(s)).toEither
     }
 
   implicit val finiteDurationArgumentValueParser: ArgumentValueParserFromMonoid[FiniteDuration] =
     new ArgumentValueParserFromMonoid[FiniteDuration] {
-      def parse(s: String) = Duration(s) match {
+      def parse(s: String) = Try(Duration(s) match {
         case d: FiniteDuration =>
           d
-      }
+      }).toEither
     }
 
   implicit val booleanArgumentValueParser: ArgumentValueParser[Boolean] =
     new ArgumentValueParser[Boolean] {
-      def parse(s: String) = s.toBoolean
+      def parse(s: String) = Try(s.toBoolean).toEither
 
       override def empty = false
     }
@@ -77,7 +94,7 @@ trait ArgumentValueParserInstances {
 
 class OptionArgumentValueParser[T: ArgumentValueParser] extends ArgumentValueParser[Option[T]] {
 
-  def parse(s: String) = Some(ArgumentValueParser[T].parse(s))
+  def parse(s: String) = ArgumentValueParser[T].parse(s).map(Some(_))
 
   val empty = None
 }

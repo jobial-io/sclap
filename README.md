@@ -10,10 +10,11 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt("count", 10)
-      timeout <- opt("timeout", 5.seconds)
-      timeToLive <- opt[Int]("ttl")
-      host <- param[String].required
+      count <- opt("count", 10).description("Number of packets")
+      timeout <- opt("timeout", 5.seconds).description("The timeout")
+      timeToLive <- opt[Int]("ttl").description("Time to live")
+      host <- param[String].paramLabel("<hostname>")
+        .description("The host").required
     } yield
       myPing(host, count, timeout, timeToLive)
 
@@ -23,17 +24,17 @@ object PingExample extends CommandLineApp {
 }
 ```
 
-which produces the following command line usage message when you run it with --help on the command line:
+which produces the following command line usage message when run with --help on the command line:
 
 ```text
 > PingExample --help
 
-Usage: <main class> [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] PARAM
-      PARAM
-      --count=PARAM     (default: 10).
+Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostname>
+      <hostname>        The hostname.
+      --count=PARAM     Number of packets (default: 10).
   -h, --help            Show this help message and exit.
-      --timeout=PARAM   (default: 5 seconds).
-      --ttl=PARAM
+      --timeout=PARAM   The timeout (default: 5 seconds).
+      --ttl=PARAM       Time to live.
 ```
 
 If you run it without any arguments, you will get the following on the standard error along with a non-zero exit code,
@@ -42,13 +43,13 @@ as expected:
 ```text
 > PingExample
 
-Missing required parameter: 'PARAM'
-Usage: <main class> [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] PARAM
-      PARAM
-      --count=PARAM     (default: 10).
+Missing required parameter: '<hostname>'
+Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostname>
+      <hostname>        The hostname.
+      --count=PARAM     Number of packets (default: 10).
   -h, --help            Show this help message and exit.
-      --timeout=PARAM   (default: 5 seconds).
-      --ttl=PARAM
+      --timeout=PARAM   The timeout (default: 5 seconds).
+      --ttl=PARAM       Time to live.
 ```
 
 If you run it with the argument "localhost", you should get:
@@ -67,13 +68,15 @@ Finally, if you specify some options, you will see something like:
 Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
 ```
 
-Of course, these examples assume that you have created an alias to or wrapped up your Scala app so that you can execute
-it on the command line as `PingExample`).
+Of course, these examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
+you can execute it on the command line as `PingExample`.
 
 ## Introduction
 
 **Sclap** is a purely functional, type safe, composable, easy to test command line argument parser for Scala. Command
-line is still king and writing command line tools should be straightforward and painless. Although **Sclap** is built on
+line is still king and writing command line tools should be straightforward and painless.
+
+Although Sclap is built on
 **Cats**, **Cats Effect** and **Cats Free** in a purely functional style and combines best with the Cats ecosystem, you
 don't need to know any of those libraries to depend on it. Sclap can be used seamlessly in non-Cats based or non-FP
 applications as well. It comes with:
@@ -120,40 +123,29 @@ You can find this example along with many other - more complex - ones at ....
 To use Sclap you need to add
 
 ```scala
-"io.jobial" % "sclap" %% "0.9.0"
+libraryDependencies ++= Seq(
+  "io.jobial" %% "sclap" % "0.9.3"
+)
 ```
 
-to your build.sbt or
+to your `build.sbt` or
 
 ```xml
 
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.3</version>
 </dependency>
 ```
 
-to pom.xml if you use Maven where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
+to `pom.xml` if you use Maven where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
 
 ### ...and a bit more detailed one
 
 ```scala
-import io.jobial.sclap.CommandLineApp
-import concurrent.duration._
 
-object PingExample extends CommandLineApp {
-
-  def run =
-    for {
-      count <- opt("count", 10)
-      timeout <- opt("timeout", 5 seconds)
-      timeToLive <- opt[Int]("ttl")
-      host <- param[String].required
-    } yield
-      myPing(host, count, timeout, quiet)
-
-}
+...
 ```
 
 which produces the usage:
@@ -174,8 +166,7 @@ A few things to note here:
 
 * Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
   easily add support for further types (or override the defaults) by implementing instances of the `ArgumentValueParser`
-  and
-  `ArgumentValuePrinter` type classes (see examples later).
+  and `ArgumentValuePrinter` type classes (see examples later).
 
 
 * The app extends the `CommandLineApp` trait and has to implement the `run` function. The result of this function is of
@@ -189,8 +180,8 @@ A few things to note here:
   has to be enclosed in an IO ('lifted' into an IO context) before it is returned in the yield part of the for
   comprehension in the run function. If your application logic results in something other than an IO, it gets
   implicitly 'lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly
-  become `IO[Int]`, taking care of any exceptions potentially thrown in the process. Also, if yield results in a Future
-  or a Try, Sclap will know how to lift them into an `IO[_]` context in a safe
+  become `IO[Int]`, taking care of any exceptions potentially thrown in the process. Also, if yield results in
+  a `Future`, `Try` or an `Either[Throwable, _]`, Sclap will know how to lift them into an `IO[_]` context in a safe
   (referentially transparent) way, propagating and handling errors automatically. The IO context guarantees that your
   application logic will only run once the arguments have been parsed and validated safely.
 
@@ -205,6 +196,72 @@ A few things to note here:
 ## Command header and description
 
 ## Subcommands
+
+Sclap supports subcommands naturally by nesting command specs. Let's say we want to define a command line interface to
+add or subtract two numbers:
+
+```scala
+
+import io.jobial.sclap.CommandLineApp
+import cats.effect.IO
+
+object ArithmeticExample extends CommandLineApp {
+
+  def add =
+    for {
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
+    } yield IO(a + b)
+
+  def sub =
+    for {
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
+    } yield IO(a - b)
+
+  def run =
+    for {
+      addResult <- subcommand("add")(add)
+      subResult <- subcommand("sub")(sub)
+    } yield for {
+      r <- addResult orElse subResult
+    } yield println(r)
+}
+```
+
+```
+> ArithmeticExample --help
+
+Usage: ArithmeticExample [-h] [COMMAND]
+  -h, --help   Show this help message and exit.
+Commands:
+  add
+  sub
+```
+
+and
+
+```
+> ArithmeticExample add --help
+
+Usage: ArithmeticExample add -a=PARAM -b=PARAM
+-a=PARAM
+-b=PARAM
+```
+
+so we can
+
+```
+> ArithmeticExample add -a=3 -b=2
+5
+> ArithmeticExample sub -a=3 -b=2
+1
+
+```
+
+The structure of a subcommand is the same as of a main command. Commands can be arbitrarily combined into a hierarchy of
+subcommands using the `subcommand(...)` function. Since everything is referentially transparent here, subcommand and
+command definitions can be reused and combined arbitrarily, without any side-effect.
 
 ## Error handling
 
@@ -246,8 +303,8 @@ an error occurred...
 
 ### What if my code throws Exceptions?
 
-Since the application code is always wrapped in an IO, an exception thrown will result in an IO with an error state
-exactly the same way as above:
+Since the application code in yield is always wrapped in an IO, an exception thrown will result in an IO with an error
+state exactly the same way as above:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -271,7 +328,7 @@ an error occurred...
 ```
 
 with a non-zero exit code. However, if you call it with --help, the application code will never run and the exception
-doesn't get thrown as expected:
+doesn't get thrown, as you would expect:
 
 ```
 > ExceptionExample --help
@@ -319,7 +376,7 @@ there was an error...
 
 with a non-zero exit code.
 
-### How about returning a Try?
+### How about returning a Try or an Either?
 
 You can return a Try as well:
 
@@ -341,6 +398,44 @@ The behaviour is the same as for Future.
 Argument values are handled type safely in Sclap. Parsing and printing arguments of different types are done through
 the `ArgumentValueParser` and `ArgumentValuePrinter` type classes.
 
+An example for parsing a command line option of type LocalDate:
+
+```scala
+import io.jobial.sclap.CommandLineApp
+import io.jobial.sclap.core.{ArgumentValueParser, ArgumentValuePrinter}
+import java.time.LocalDate
+import scala.util.Try
+
+object DateExample extends CommandLineApp {
+
+  implicit val parser = new ArgumentValueParser[LocalDate] {
+    def parse(value: String) =
+      Try(LocalDate.parse(value)).toEither
+
+    def empty: LocalDate =
+      LocalDate.now
+  }
+
+  implicit val printer = new ArgumentValuePrinter[LocalDate] {
+    def print(value: LocalDate) =
+      value.toString
+  }
+
+  def run =
+    for {
+      d <- opt("date", LocalDate.now).description("The date")
+    } yield
+      println(s"date: $d")
+}
+```
+
+Instead of defining the printer directly, it can be derived from a `Show` intance. So the following would also work to
+print the default argument value:
+
+```scala
+  implicit val localDateShow = Show.fromToString[LocalDate]
+```
+
 ## Accessing all the arguments
 
 If for some reason you need to access all the arguments as they were passed on the command line, you can use the args
@@ -358,7 +453,7 @@ def run =
 
 ### Overriding the app name
 
-## Generating a bash or ZSH autocomplete script
+## Generating a Bash or ZSH autocomplete script
 
 ## Testing your app
 
@@ -403,7 +498,7 @@ def run =
 ```
 
 which is just a usual monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
-for comprehension binds the options and parameters to names, and the yield section returns the application logic. As
+comprehension binds the options and parameters to names, and the yield section returns the application logic. As
 mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
 library to process the description safely, without any side-effects. To make it more convenient for applications that do
 not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Any`) into an

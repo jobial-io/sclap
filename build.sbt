@@ -14,90 +14,65 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.3")
-ThisBuild / version := "0.9.0"
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.4")
+ThisBuild / version := "0.9.3"
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
 
-ThisBuild / publishTo := sonatypePublishToBundle.value
-ThisBuild / sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io"))
-ThisBuild / publishTo := sonatypePublishTo.value
-ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true)
-ThisBuild / publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
-publishConfiguration := publishConfiguration.value.withOverwrite(true)
-publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
-publishTo := sonatypePublishToBundle.value
-sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io"))
-organizationName := "Jobial OÜ"
-licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+lazy val commonSettings = Seq(
+  publishConfiguration := publishConfiguration.value.withOverwrite(true),
+  publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
+  publishTo := sonatypePublishToBundle.value,
+  sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
+  organizationName := "Jobial OÜ",
+  licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+)
 
-val CatsVersion = "2.0.0"
+lazy val CatsVersion = "2.0.0"
+lazy val ScalaLoggingVersion = "3.9.2"
+lazy val PicocliVersion = "4.6.1"
+lazy val ScalatestVersion = "3.2.3"
 
 lazy val root: Project = project
   .in(file("."))
+  .settings(commonSettings)
   .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app`)
 
 lazy val `sclap-core` = project
   .in(file("sclap-core"))
+  .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % CatsVersion,
       "org.typelevel" %% "cats-effect" % CatsVersion,
       "org.typelevel" %% "cats-free" % CatsVersion,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
-    ),
-    publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishTo := sonatypePublishToBundle.value,
-    sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
-    organizationName := "Jobial OÜ",
-    licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-    sources in (Compile,doc) := Seq.empty
+      "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion
+    )
   )
 
 lazy val `sclap-picocli` = project
   .in(file("sclap-picocli"))
+  .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-effect" % CatsVersion,
-      "org.typelevel" %% "cats-free" % CatsVersion,
-      "info.picocli" % "picocli" % "4.5.2"
-    ),
-    publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishTo := sonatypePublishToBundle.value,
-    sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "Jobial OÜ", "orbang@jobial.io")),
-    organizationName := "Jobial OÜ",
-    licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+      "info.picocli" % "picocli" % PicocliVersion
+    )
   )
   .dependsOn(`sclap-core`)
 
 lazy val `sclap-app` = project
   .in(file("sclap-app"))
+  .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.3" % "test"
-    ),
-    publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishTo := sonatypePublishToBundle.value,
-    sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
-    organizationName := "Jobial OÜ",
-    licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+      "org.scalatest" %% "scalatest" % ScalatestVersion % "test"
+    )
   )
   .dependsOn(`sclap-picocli`)
 
 lazy val `sclap-examples` = project
   .in(file("sclap-examples"))
+  .settings(commonSettings)
   .dependsOn(`sclap-app`)
-  .settings(
-    publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true),
-    publishTo := sonatypePublishToBundle.value,
-    sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
-    organizationName := "Jobial OÜ",
-    licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
-  )
