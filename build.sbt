@@ -15,7 +15,7 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.4")
-ThisBuild / version := "0.9.3"
+ThisBuild / version := "0.9.4"
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
@@ -37,6 +37,10 @@ lazy val ScalatestVersion = "3.2.3"
 lazy val root: Project = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(
+    publishArtifact := false,
+    publishArtifact in makePom := true
+  )
   .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app`)
 

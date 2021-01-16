@@ -259,10 +259,12 @@ trait PicocliCommandLineParser {
             }
             .inspect(_ => IO())
         case SubcommandWithCommandLine(subcommand, subcommandLine) =>
-          val r = parseCommandLine(subcommandLine, args, CommandLineParsingContext(subcommand = true)).picocliCommandSpec
-          val picocliSubcommandLine = new PicocliCommandLine(r)
-          subcommand.aliases.map(aliases => picocliSubcommandLine.getCommandSpec.aliases(aliases: _*))
-          State.modify[CommandLineParsingContext](_.updateSpec(_.addSubcommand(subcommand.name, picocliSubcommandLine))).inspect(_ => IO())
+          State.modify[CommandLineParsingContext] { ctx =>
+            val r = parseCommandLine(CommandWithCommandLine(ctx.command.copy(name = None), subcommandLine).build, args, CommandLineParsingContext(subcommand = true)).picocliCommandSpec
+            val picocliSubcommandLine = new PicocliCommandLine(r)
+            subcommand.aliases.map(aliases => picocliSubcommandLine.getCommandSpec.aliases(aliases: _*))
+            ctx.updateSpec(_.addSubcommand(subcommand.name, picocliSubcommandLine))
+          }.inspect(_ => IO())
         case NoSpec(result) =>
           State.inspect(_ => result)
         case Args() =>

@@ -141,10 +141,9 @@ to your `build.sbt` or
 
 to `pom.xml` if you use Maven where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
 
-### ...and a bit more detailed one
+### ...and a more detailed one
 
 ```scala
-
 ...
 ```
 
@@ -194,6 +193,27 @@ A few things to note here:
 ## Positional parameters and options
 
 ## Command header and description
+
+```scala
+import io.jobial.sclap.CommandLineApp
+
+object CommandWithHeaderExample extends CommandLineApp {
+
+  def run =
+    command.header("Hello World")
+      .description("Just say hello") {
+        for {
+          hello <- opt("--hello", "world")
+        } yield
+          println(s"hello $hello")
+      }
+}
+```
+
+```
+> CommandWithHeaderExample --help
+
+```
 
 ## Subcommands
 
@@ -378,7 +398,7 @@ with a non-zero exit code.
 
 ### How about returning a Try or an Either?
 
-You can return a Try as well:
+You can return a Try or an Either as well:
 
 ```scala
 import util.Try
@@ -388,6 +408,20 @@ def run =
     hello <- opt("--hello", "world")
   } yield Try {
     println(s"hello $hello")
+  }
+```
+
+```scala
+import util.Either
+
+def run =
+  for {
+    hello <- opt("--hello")
+  } yield hello match {
+    case Some(hello) =>
+      Right(hello)
+    case None =>
+      Left(new IllegalArgumentException("wrong argument"))
   }
 ```
 
@@ -453,13 +487,34 @@ def run =
 
 ### Overriding the app name
 
+The name of the app printed in the usage help is derived from the main class name by default. It can be overridden
+either by specifying using the
+
+```scala
+
+def run =
+  command(name = "my-app") {
+    ...
+  }
+```
+
+or by setting the `app.name` system property:
+
+```
+java -Dapp.name=my-app ...
+```
+
 ## Generating a Bash or ZSH autocomplete script
+
+...
 
 ## Testing your app
 
 Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests against your CLI specs:
 
 ## Further Examples
+
+...
 
 ## How does it work?
 
@@ -540,10 +595,9 @@ example:
 ## Implementation dependent extensions
 
 If you need to access the implementation specific features in Picocli for whatever reason, the sclap-picocli module
-provides extensions to Opts and Params that allow you to access the underlying Builder instances directly:
+provides extensions to Opts and Params that allow access to the underlying Builder instances directly, for example:
 
 ```scala
 
+opt(...).withPicocliBuilder(_.hidden(true))
 ```
-
-This way you can override or customize any aspects of the underlying command line description if needed.

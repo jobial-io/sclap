@@ -233,7 +233,22 @@ class CommandLineParserTest
       TestCase(Seq("--c", "hi", "s1", "--a", "hi"), succeedWith((Some("hi"), Some("hi")))),
       TestCase(Seq("s2"), succeedWith((None, 1))),
       TestCase(Seq("s2", "-b", "2"), succeedWith((None, 2))),
-      TestCase(Seq("--c", "hi", "s2", "-b", "3"), succeedWith((Some("hi"), 3)))
+      TestCase(Seq("--c", "hi", "s2", "-b", "3"), succeedWith((Some("hi"), 3))),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--c=PARAM] [COMMAND]
+      --c=PARAM
+  -h, --help      Show this help message and exit.
+Commands:
+  s1
+  s2, s3
+""")),
+      TestCase(Seq("s1", "--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest s1 [-h] [--a=PARAM]
+      --a=PARAM
+  -h, --help      Show this help message and exit.
+""")),
+      TestCase(Seq("s2", "--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
+  -b=PARAM     (default: 1).
+  -h, --help   Show this help message and exit.
+"""))
     )
   }
 
@@ -600,6 +615,4 @@ This is a subcommand.
   }
 
   // TODO: add test for Try, Either, Any
-
-  // TODO: add test for subcommand --help
 }
