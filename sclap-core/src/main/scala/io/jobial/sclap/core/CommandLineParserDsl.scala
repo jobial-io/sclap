@@ -473,7 +473,7 @@ case class Command(
 
 case class CommandWithCommandLine[A](
   command: Command,
-  commandLine: CommandLine[A],
+  commandLine: CommandLine[A]
 ) extends CommandLineArgSpecA[IO[A]] {
 
   // Prepend this to the rest of the command line
