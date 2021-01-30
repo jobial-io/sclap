@@ -391,8 +391,8 @@ This is the main command.
         l <- opt[Long]("l", 2)
         f <- opt[Float]("f", 1.0f)
         d <- opt[Double]("d", 1.0)
-        g <- opt[Duration]("g", 1 second)
-        h <- opt[FiniteDuration]("k", 2 seconds)
+        g <- opt[Duration]("g", 1.second)
+        h <- opt[FiniteDuration]("k", 2.seconds)
         j <- opt[BigDecimal]("j", BigDecimal(1.0))
       } yield IO {
         (s, b, i, l, f, d, g, h, j)

@@ -44,7 +44,7 @@ trait CommandLineParserFutureTestBase
   implicit val timer = IO.timer(ExecutionContext.global)
 
   def checkSideEffects(counter: AtomicInteger, sideEffectCountInSpec: Int) = TestSuccessCheck { _: TestResult[Int] =>
-    IO.sleep(1 second) *>
+    IO.sleep(1.second) *>
       IO(assert(if (sideEffectExpected) counter.get == sideEffectCountInSpec else counter.get == 0))
   }
 
