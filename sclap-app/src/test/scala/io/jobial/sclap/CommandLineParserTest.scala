@@ -399,8 +399,8 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
-      TestCase(Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(1.0)))),
+      TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0)))),
+      TestCase(Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0)))),
       TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
                              [-j=PARAM] [-k=PARAM] [-l=PARAM] [-s=PARAM]
   -b           (default: true).
@@ -426,15 +426,15 @@ This is the main command.
         l <- param[Long](2)
         f <- param[Float](3.0f)
         d <- param[Double](4.0)
-        g <- param[Duration](1 second)
-        h <- param[FiniteDuration](2 seconds)
+        g <- param[Duration](1.second)
+        h <- param[FiniteDuration](2.seconds)
         j <- param[BigDecimal](BigDecimal(1.0))
       } yield IO {
         (s, b, i, l, f, d, g, h, j)
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds", "3.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1 second, 2 seconds, BigDecimal(3.0))))
+      TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds", "3.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(3.0))))
     )
   }
 
