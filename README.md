@@ -24,7 +24,7 @@ object PingExample extends CommandLineApp {
 }
 ```
 
-which produces the following command line usage message when run with --help on the command line:
+which produces the following command line usage message when run with --help:
 
 ```text
 > PingExample --help
@@ -139,7 +139,7 @@ to your `build.sbt` or
 </dependency>
 ```
 
-to `pom.xml` if you use Maven where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
+to `pom.xml` if you use Maven, where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
 
 ### ...and a more detailed one
 
@@ -470,7 +470,7 @@ print the default argument value:
   implicit val localDateShow = Show.fromToString[LocalDate]
 ```
 
-## Accessing all the arguments
+## Accessing the full argument list
 
 If for some reason you need to access all the arguments as they were passed on the command line, you can use the args
 function:
