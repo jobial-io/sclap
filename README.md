@@ -1,6 +1,6 @@
 # Sclap: Scala Command Line Apps Made Simple
 
-An example says more than a thousand words:
+An example speaks more than a thousand words:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -124,7 +124,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "0.9.4"
+  "io.jobial" %% "sclap" % "0.9.5"
 )
 ```
 
@@ -135,7 +135,7 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>0.9.4</version>
+    <version>0.9.5</version>
 </dependency>
 ```
 
