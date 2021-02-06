@@ -89,24 +89,27 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         }
       })
 
-  def failCommandLineParsingWithThrowable[T, X <: Throwable : ClassTag](f: String => Assertion = { _ => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
+  def failWithThrowable[T, X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
     failWith[T]({
       case x: X =>
-        f(x.getMessage)
+        f(x)
       case x: Throwable =>
         fail(s"wrong exception is thrown: ", x)
     }, out, err)
 
+  def failCommandExecutionWith[X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }) =
+    failWithThrowable[(Option[String], Any), X](f)
+
   def failWithUsageHelpRequested[T](help: String) =
-    failCommandLineParsingWithThrowable[T, UsageHelpRequested](_ => Succeeded, out = Some(help), None)
+    failWithThrowable[T, UsageHelpRequested](_ => Succeeded, out = Some(help), None)
 
   def failWithVersionHelpRequested[T](version: String) =
-    failCommandLineParsingWithThrowable[T, VersionHelpRequested](_ => Succeeded, out = Some(version), None)
+    failWithThrowable[T, VersionHelpRequested](_ => Succeeded, out = Some(version), None)
 
   def failCommandLineParsingWith[T](message: String) =
-    failCommandLineParsingWithThrowable[T, CommandLineParsingFailed](m => assert(m == message))
+    failWithThrowable[T, CommandLineParsingFailed](t => assert(t.getMessage == message))
 
   def failSubcommandLineParsingWith[T](message: String) =
-    failCommandLineParsingWithThrowable[T, CommandLineParsingFailedForSubcommand](m => assert(m == message))
+    failWithThrowable[T, CommandLineParsingFailedForSubcommand](t => assert(t.getMessage == message))
 
 }

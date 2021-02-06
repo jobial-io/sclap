@@ -205,16 +205,19 @@ class CommandLineParserTest
     val subcommand1 =
       for {
         a <- opt[String]("--a")
-      } yield IO {
-        a
-      }
+      } yield
+        if (a eqv Some("0"))
+          IO.raiseError(new IllegalArgumentException("s1 failed"))
+        else
+          IO(a)
 
     val subcommand2 = for {
       b <- opt("-b", 1)
-    } yield IO {
-      b
-
-    }
+    } yield
+      if (b eqv 0)
+        IO.raiseError(new IllegalArgumentException("s2 failed"))
+      else
+        IO(b)
 
     val spec =
       for {
@@ -248,7 +251,9 @@ Commands:
       TestCase(Seq("s2", "--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
   -b=PARAM     (default: 1).
   -h, --help   Show this help message and exit.
-"""))
+""")),
+      TestCase(Seq("s1", "--a", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s1 failed"))),
+      TestCase(Seq("s2", "-b", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s2 failed")))
     )
   }
 

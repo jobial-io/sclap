@@ -273,7 +273,7 @@ trait PicocliCommandLineParser {
     }
   }
 
-  case class CommandLineExecutionContext(command: Command, paramCounter: Int = 0) {
+  case class CommandLineExecutionContext(command: Command, paramCounter: Int = 0, subcommandParsed: Option[IO[Any]] = None) {
 
     def incrementParamCounter =
       copy(paramCounter = paramCounter + 1)
@@ -352,15 +352,24 @@ trait PicocliCommandLineParser {
       } else IO()
       r <- commandLine.foldMap(executionCompiler(args, context, picocliOut, picocliErr)).run(CommandLineExecutionContext(context.command)).value._2.handleErrorWith {
         case t: CommandLineParsingFailedForSubcommand =>
-          if (subcommand)
+          // A subcommand failed to parse
+          if (subcommand) {
+            // If we are in a subcommand, just propagate the exception.
             IO.raiseError(t)
-          else {
-            // If all subcommands failed, print usage message to std err and fail
-            picocliErr.print(picocliCommandLine.getUsageMessage)
-            IO.raiseError(t)
+          } else {
+            // All subcommands failed to parse, print usage message to std err and propagate exception.
+            IO(picocliErr.print(picocliCommandLine.getUsageMessage)) *>
+              IO.raiseError(t)
           }
         case t =>
-          IO.raiseError(t)
+          if (subcommand) {
+            // If we are in a subcommand, just propagate the exception.
+            IO.raiseError(t)
+          } else {
+            // A subcommand failed to execute, print the error message to std err and propagate exception.
+            IO(picocliErr.print(t.getMessage)) *>
+              IO.raiseError(t)
+          }
       }
     } yield r
 
@@ -430,13 +439,20 @@ trait PicocliCommandLineParser {
           case CommandWithCommandLine(commandLine, _) =>
             State.inspect(_ => IO())
           case SubcommandWithCommandLine(subcommand, subCommandLine) =>
-            State.inspect(context => Option(commandSpec.subcommands.get(subcommand.name).getParseResult) match {
+            State.modify[CommandLineExecutionContext](context => Option(commandSpec.subcommands.get(subcommand.name).getParseResult) match {
               case Some(parseResult) =>
-                executeCommandLine(subCommandLine, CommandLineParsingContext(context.command, commandSpec.subcommands.get(subcommand.name).getCommandSpec), args, picocliOut, picocliErr, true)
+                context.copy(subcommandParsed = Some(executeCommandLine(subCommandLine, CommandLineParsingContext(context.command, commandSpec.subcommands.get(subcommand.name).getCommandSpec), args, picocliOut, picocliErr, true)))
               case None =>
                 debug(s"parsing args failed for subcommand ${subcommand.name}, proceeding...")
-                IO.raiseError(CommandLineParsingFailedForSubcommand(subcommand.name, new RuntimeException))
-            })
+                context
+            }).inspect(context =>
+              context.subcommandParsed match {
+                case Some(r) =>
+                  r
+                case None =>
+                  IO.raiseError(CommandLineParsingFailedForSubcommand(subcommand.name, new RuntimeException))
+              }
+            )
         }
     }
 
