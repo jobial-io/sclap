@@ -18,16 +18,17 @@ import scala.concurrent.duration._
 
 object PingExample extends CommandLineApp {
 
-  def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
-    println(s"Pinging $host with $count packets, timeout: $timeout, ttl: $timeToLive...")
-
   def run =
     for {
-      count <- opt("count", 10)
-      timeout <- opt("timeout", 5.seconds)
-      timeToLive <- opt[Int]("ttl")
-      host <- param[String].required
+      count <- opt("count", 10).description("Number of packets")
+      timeout <- opt("timeout", 5.seconds).description("The timeout")
+      timeToLive <- opt[Int]("ttl").description("Time to live")
+      host <- param[String].paramLabel("<hostname>")
+        .description("The host").required
     } yield
       myPing(host, count, timeout, timeToLive)
+
+  def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
+    println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
 
 }

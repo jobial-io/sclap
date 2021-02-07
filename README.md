@@ -37,6 +37,10 @@ Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostnam
       --ttl=PARAM       Time to live.
 ```
 
+or if you have a colour terminal, you should get something like:
+
+![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/sclap-examples/pingExampleScreenshot.png)
+
 If you run it without any arguments, you will get the following on the standard error along with a non-zero exit code,
 as expected:
 
@@ -70,6 +74,46 @@ Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
 
 Of course, these examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
 you can execute it on the command line as `PingExample`.
+
+
+A few things to note here:
+
+* Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is an `Option[Int]`
+  because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
+  an `Option[String]`)
+  because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
+  available. Also, the type of timeout is inferred from the default value. By being type safe, there is virtually no
+  possibility of ending up with options and parameters being in an "illegal state". You can be sure your opts and params
+  are always valid in your application logic, otherwise Sclap will catch the problem before it reaches your code and
+  handles the error appropriately (for example, it returns an error exit code and prints the error and usage messages).
+
+
+* Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
+  easily add support for further types (or override the defaults) by implementing instances of the `ArgumentValueParser`
+  and `ArgumentValuePrinter` type classes (see examples later).
+
+
+* The app extends the `CommandLineApp` trait and has to implement the `run` function. The result of this function is of
+  type `CommandLine[_]`. You don't really need to know much about it though: as long as you implement your `run`
+  function in this format, it will return the right type and Sclap will be able to interpret your CLI.
+
+
+* In the yield part of the for {...}, you can return pretty much anything, Sclap will know how to deal with it,
+  including error handling. You might have noticed though that the return type of the yield block is actually always
+  an `IO[_]`. If you are not familiar with the IO monad, all you need to know about it is that your application logic
+  has to be enclosed in an IO ('lifted' into an IO context) before it is returned in the yield part of the for
+  comprehension in the run function. If your application logic results in something other than an IO, it gets
+  implicitly 'lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly
+  become `IO[Int]`, taking care of any exceptions potentially thrown in the process. Also, if yield results in
+  a `Future`, `Try` or an `Either[Throwable, _]`, Sclap will know how to lift them into an `IO[_]` context in a safe
+  (referentially transparent) way, propagating and handling errors automatically. The IO context guarantees that your
+  application logic will only run once the arguments have been parsed and validated safely.
+
+
+* Sclap will handle errors returned by your application code automatically: if your app throws an exception (or returns
+  an error state in an `IO`, `Future` or `Try`), it will automatically be turned into a non-zero exit code.
+  Alternatively, you can return an `IO[ExitCode]` to explicitly specify the exit code (see `cats.effect.ExitCode` in
+  Cats Effect).
 
 ## Introduction
 
@@ -116,9 +160,23 @@ object HelloExample extends CommandLineApp {
 
 which produces the following usage help:
 
-...
+```
+> HelloExample --help
 
-You can find this example along with many other - more complex - ones at ....
+Usage: HelloExample [-h] [--hello=PARAM]
+  -h, --help          Show this help message and exit.
+      --hello=PARAM
+```
+
+or
+
+```
+> HelloExample --hello=world
+
+hello Some(world)
+```
+
+You can find this example along with many other more complex ones [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
 
 To use Sclap you need to add
 
@@ -151,44 +209,6 @@ which produces the usage:
 
 ...
 
-A few things to note here:
-
-* Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is an `Option[Int]`
-  because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
-  an `Option[String]`)
-  because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
-  available. Also, the type of timeout is inferred from the default value. By being type safe, there is virtually no
-  possibility of ending up with options and parameters being in an "illegal state". You can be sure your opts and params
-  are always valid in your application logic, otherwise Sclap will catch the problem before it reaches your code and
-  handles the error appropriately (for example, it returns an error exit code and prints the error and usage messages).
-
-
-* Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
-  easily add support for further types (or override the defaults) by implementing instances of the `ArgumentValueParser`
-  and `ArgumentValuePrinter` type classes (see examples later).
-
-
-* The app extends the `CommandLineApp` trait and has to implement the `run` function. The result of this function is of
-  type `CommandLine[_]`. You don't really need to know much about it though: as long as you implement your `run`
-  function in this format, it will return the right type and Sclap will be able to interpret your CLI.
-
-
-* In the yield part of the for {...}, you can return pretty much anything, Sclap will know how to deal with it,
-  including error handling. You might have noticed though that the return type of the yield block is actually always
-  an `IO[_]`. If you are not familiar with the IO monad, all you need to know about it is that your application logic
-  has to be enclosed in an IO ('lifted' into an IO context) before it is returned in the yield part of the for
-  comprehension in the run function. If your application logic results in something other than an IO, it gets
-  implicitly 'lifted' into an `IO[_]` context. For example, if yield has code that returns an Int, it will implicitly
-  become `IO[Int]`, taking care of any exceptions potentially thrown in the process. Also, if yield results in
-  a `Future`, `Try` or an `Either[Throwable, _]`, Sclap will know how to lift them into an `IO[_]` context in a safe
-  (referentially transparent) way, propagating and handling errors automatically. The IO context guarantees that your
-  application logic will only run once the arguments have been parsed and validated safely.
-
-
-* Sclap will handle errors returned by your application code automatically: if your app throws an exception (or returns
-  an error state in an `IO`, `Future` or `Try`), it will automatically be turned into a non-zero exit code.
-  Alternatively, you can return an `IO[ExitCode]` to explicitly specify the exit code (see `cats.effect.ExitCode` in
-  Cats Effect).
 
 ## Positional parameters and options
 
@@ -396,7 +416,7 @@ there was an error...
 
 with a non-zero exit code.
 
-### How about returning a Try or an Either?
+### How about returning a Try or Either?
 
 You can return a Try or an Either as well:
 
@@ -493,12 +513,14 @@ either by specifying using the
 ```scala
 
 def run =
-  command(name = "my-app") {
-    ...
+  command(name = "my-app").description("My really cool app.") {
+    for {
+      o <- opt(...)
+    } yield ...
   }
 ```
 
-or by setting the `app.name` system property:
+syntax or by setting the `app.name` system property:
 
 ```
 java -Dapp.name=my-app ...
@@ -601,3 +623,5 @@ provides extensions to Opts and Params that allow access to the underlying Build
 
 opt(...).withPicocliBuilder(_.hidden(true))
 ```
+
+[here]: https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example
