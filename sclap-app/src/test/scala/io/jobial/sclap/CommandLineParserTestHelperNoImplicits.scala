@@ -41,7 +41,7 @@ case class TestFailureCheck[T](assertion: TestResult[T] => IO[Assertion]) extend
   def behave = "fail"
 }
 
-case class TestResult[T](result: Try[T], out: String, err: String)
+case class TestResult[T](result: Either[Throwable, T], out: String, err: String)
 
 trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits {
   this: AsyncFlatSpec =>
@@ -56,7 +56,7 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         val checkResult =
           for {
             result <- executeCommandLine(spec, t.args, new PrintStream(out), new PrintStream(err))
-              .redeem(Failure[A](_), Success(_))
+              .redeem(Left[Throwable, A](_), Right(_))
             r <- t.check.assertion(TestResult(result, out.toString, err.toString))
           } yield r
         checkResult.unsafeToFuture
@@ -65,12 +65,12 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
   def succeedWith[T](result: T, out: Option[String] = None, err: Option[String] = None) =
     TestSuccessCheck({ testResult: TestResult[T] =>
       testResult.result match {
-        case Success(r) =>
+        case Right(r) =>
           IO(logger.debug(r.toString)) *>
             IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
             IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
             IO(assert(result == r))
-        case Failure(t) =>
+        case Left(t) =>
           IO(logger.error("failed with:", t)) *>
             IO(fail(t))
       }
@@ -80,9 +80,9 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
     TestFailureCheck[T](
       { testResult: TestResult[T] =>
         testResult.result match {
-          case Success(r) =>
+          case Right(r) =>
             IO(fail(s"expected failure, got $testResult"))
-          case Failure(t) =>
+          case Left(t) =>
             IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
               IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
               IO(check(t))

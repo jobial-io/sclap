@@ -372,7 +372,7 @@ def run =
   }
 ```
 
-Of course, the `Future` gets executed only if Sclap could parse the arguments correctly.
+Of course, the `Future` gets executed only if Sclap could parse the arguments successfully.
 
 Errors are handled as expected:
 

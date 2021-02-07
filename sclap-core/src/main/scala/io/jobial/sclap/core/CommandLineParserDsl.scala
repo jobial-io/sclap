@@ -483,22 +483,48 @@ case class CommandWithCommandLine[A](
 
 case class Args() extends CommandLineArgSpecA[List[String]]
 
+/**
+ * Used internally to signal command line parsing failure.
+ *
+ * @param cause
+ */
 case class CommandLineParsingFailed(cause: Throwable)
   extends IllegalStateException(cause.getMessage, cause)
 
+/**
+ * Used internally to signal command line parsing failure for a subcommand.
+ *
+ * @param name
+ * @param cause
+ */
 case class CommandLineParsingFailedForSubcommand(name: String, cause: Throwable)
   extends IllegalStateException(s"parsing failed for subcommand $name", cause)
 
 sealed abstract class HelpRequested extends IllegalStateException
 
+/**
+ * Used internally to signal usage help request (triggered by --help usually).
+ */
 case class UsageHelpRequested()
   extends HelpRequested
 
+/**
+ * Used internally to signal version help request (triggered by --version usually).
+ */
 case class VersionHelpRequested()
   extends HelpRequested
 
+/**
+ * Use this exception to signal an error in the command line usage. It is handled like any other exception, but it
+ * also prints the usage help.
+ */
 case class IncorrectCommandLineUsage(message: String)
   extends IllegalStateException(message)
 
+/**
+ * Used internally to differentiate between error in subcommand and main command.
+ *
+ * @param cause
+ */
 case class IncorrectCommandLineUsageInSubcommand(cause: IncorrectCommandLineUsage)
   extends IllegalStateException(cause.getMessage)

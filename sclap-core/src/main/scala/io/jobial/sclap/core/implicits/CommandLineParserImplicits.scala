@@ -23,14 +23,14 @@ trait CommandLineParserImplicits {
 
   implicit def buildCommandLineArgSpec[A](spec: CommandLineArgSpecA[A]) = spec.build
 
-  implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) =
-    IO.fromFuture(IO(f))(IO.contextShift(ec))
-
   implicit def fromTry[A](t: => Try[A]): IO[A] =
     IO().flatMap(_ => IO.fromTry(t))
 
   implicit def fromEither[A](e: => Either[Throwable, A]): IO[A] =
     IO().flatMap(_ => IO.fromEither(e))
+
+  implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) =
+    IO.fromFuture(IO(f))(IO.contextShift(ec))
 
   implicit def fromAny[A](a: => A): IO[A] =
     IO(a)
