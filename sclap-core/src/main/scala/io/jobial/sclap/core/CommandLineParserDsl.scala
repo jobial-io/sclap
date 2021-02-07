@@ -489,10 +489,16 @@ case class CommandLineParsingFailed(cause: Throwable)
 case class CommandLineParsingFailedForSubcommand(name: String, cause: Throwable)
   extends IllegalStateException(s"parsing failed for subcommand $name", cause)
 
-sealed abstract class HelpRequested(message: String) extends IllegalStateException(message)
+sealed abstract class HelpRequested extends IllegalStateException
 
 case class UsageHelpRequested()
-  extends HelpRequested("Usage help requested")
+  extends HelpRequested
 
 case class VersionHelpRequested()
-  extends HelpRequested("Version help requested")
+  extends HelpRequested
+
+case class IncorrectCommandLineUsage(message: String)
+  extends IllegalStateException(message)
+
+case class IncorrectCommandLineUsageInSubcommand(cause: IncorrectCommandLineUsage)
+  extends IllegalStateException(cause.getMessage)

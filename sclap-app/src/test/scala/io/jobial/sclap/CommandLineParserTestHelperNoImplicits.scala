@@ -97,8 +97,8 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         fail(s"wrong exception is thrown: ", x)
     }, out, err)
 
-  def failCommandExecutionWith[X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }) =
-    failWithThrowable[(Option[String], Any), X](f)
+  def failCommandExecutionWith[X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
+    failWithThrowable[(Option[String], Any), X](f, out, err)
 
   def failWithUsageHelpRequested[T](help: String) =
     failWithThrowable[T, UsageHelpRequested](_ => Succeeded, out = Some(help), None)

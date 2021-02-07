@@ -13,7 +13,7 @@
 package io.jobial.sclap
 
 import cats.effect.IO
-import io.jobial.sclap.core.{ArgumentValueParser, ArgumentValuePrinter}
+import io.jobial.sclap.core.{ArgumentValueParser, ArgumentValuePrinter, IncorrectCommandLineUsage, IncorrectCommandLineUsageInSubcommand}
 import org.scalatest.flatspec.AsyncFlatSpec
 
 import java.time.LocalDate
@@ -216,6 +216,8 @@ class CommandLineParserTest
     } yield
       if (b eqv 0)
         IO.raiseError(new IllegalArgumentException("s2 failed"))
+      else if (b eqv 99)
+        IO.raiseError(new IncorrectCommandLineUsage("b cannot be 99"))
       else
         IO(b)
 
@@ -224,9 +226,14 @@ class CommandLineParserTest
         c <- opt[String]("--c")
         s1 <- subcommand("s1")(subcommand1)
         s2 <- subcommand("s2").aliases("s3")(subcommand2)
-      } yield for {
-        r <- s1 orElse s2
-      } yield (c, r)
+      } yield
+        if (c eqv Some("illegal"))
+          IO.raiseError(IncorrectCommandLineUsage("c cannot be illegal"))
+        else
+          for {
+            r <- s1 orElse s2
+          } yield
+            (c, r)
 
     runCommandLineTestCases(spec)(
       TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s2")),
@@ -252,8 +259,26 @@ Commands:
   -b=PARAM     (default: 1).
   -h, --help   Show this help message and exit.
 """)),
-      TestCase(Seq("s1", "--a", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s1 failed"))),
-      TestCase(Seq("s2", "-b", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s2 failed")))
+      TestCase(Seq("s1", "--a", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s1 failed"),
+        out = Some(""), err = Some("s1 failed"))),
+      TestCase(Seq("s2", "-b", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s2 failed"),
+        out = Some(""), err = Some("s2 failed"))),
+      TestCase(Seq("s2", "-b", "99"), failCommandExecutionWith[IncorrectCommandLineUsageInSubcommand](t => assert(t.getMessage == "b cannot be 99"),
+        out = Some(""), err = Some("""b cannot be 99
+Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
+  -b=PARAM     (default: 1).
+  -h, --help   Show this help message and exit.
+"""))),
+      TestCase(Seq("--c", "illegal", "s2", "-b", "1"), failCommandExecutionWith[IncorrectCommandLineUsage](t => assert(t.getMessage == "c cannot be illegal"),
+        out = Some(""), err = Some("""c cannot be illegal
+Usage: CommandLineParserTest [-h] [--c=PARAM] [COMMAND]
+      --c=PARAM
+  -h, --help      Show this help message and exit.
+Commands:
+  s1
+  s2, s3
+""")))
+
     )
   }
 

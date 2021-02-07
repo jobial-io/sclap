@@ -327,8 +327,8 @@ trait PicocliCommandLineParser {
     commandLine: CommandLine[A],
     context: CommandLineParsingContext,
     args: Seq[String],
-    picocliOut: PrintStream,
-    picocliErr: PrintStream,
+    out: PrintStream,
+    err: PrintStream,
     subcommand: Boolean = false
   ) =
     for {
@@ -337,8 +337,8 @@ trait PicocliCommandLineParser {
       )
       _ <- if (!subcommand) IO.fromTry {
         picocliCommandLine.parseWithHandlers(
-          new Handler().useOut(picocliOut).useErr(picocliErr).asInstanceOf[IParseResultHandler2[Try[Object]]],
-          new ExceptionHandler().useOut(picocliOut).useErr(picocliErr).asInstanceOf[IExceptionHandler2[Try[Object]]],
+          new Handler().useOut(out).useErr(err).asInstanceOf[IParseResultHandler2[Try[Object]]],
+          new ExceptionHandler().useOut(out).useErr(err).asInstanceOf[IExceptionHandler2[Try[Object]]],
           args: _ *).map { _ =>
           picocliCommandLine.getParseResult
         }.recoverWith {
@@ -350,26 +350,45 @@ trait PicocliCommandLineParser {
             Failure(CommandLineParsingFailed(t))
         }
       } else IO()
-      r <- commandLine.foldMap(executionCompiler(args, context, picocliOut, picocliErr)).run(CommandLineExecutionContext(context.command)).value._2.handleErrorWith {
+      r <- commandLine.foldMap(executionCompiler(args, context, out, err)).run(CommandLineExecutionContext(context.command)).value._2.handleErrorWith {
         case t: CommandLineParsingFailedForSubcommand =>
           // A subcommand failed to parse
-          if (subcommand) {
-            // If we are in a subcommand, just propagate the exception.
+          if (subcommand)
+          // If we are in a subcommand, just propagate the exception.
             IO.raiseError(t)
-          } else {
-            // All subcommands failed to parse, print usage message to std err and propagate exception.
-            IO(picocliErr.print(picocliCommandLine.getUsageMessage)) *>
+          else
+          // All subcommands failed to parse, print usage message to std err and propagate exception.
+            IO(err.print(picocliCommandLine.getUsageMessage)) *>
               IO.raiseError(t)
-          }
         case t =>
-          if (subcommand) {
-            // If we are in a subcommand, just propagate the exception.
-            IO.raiseError(t)
-          } else {
-            // A subcommand failed to execute, print the error message to std err and propagate exception.
-            IO(picocliErr.print(t.getMessage)) *>
-              IO.raiseError(t)
-          }
+          if (subcommand)
+            t match {
+              // If we are in a subcommand and incorrect command line usage is signalled, print message and usage to std err and propagate the exception.
+              case t: IncorrectCommandLineUsage =>
+                IO {
+                  err.println(t.getMessage)
+                  err.print(picocliCommandLine.getUsageMessage)
+                } *> IO.raiseError(IncorrectCommandLineUsageInSubcommand(t))
+              // Otherwise just propagate the exception.
+              case t =>
+                IO.raiseError(t)
+            }
+          else
+            t match {
+              // If we are in the main command and incorrect command line usage is signalled, print message and usage to std err and propagate the exception. 
+              case t: IncorrectCommandLineUsage =>
+                IO {
+                  err.print(t.getMessage)
+                  err.println
+                  err.print(picocliCommandLine.getUsageMessage)
+                } *> IO.raiseError(t)
+              // If we are in the main command and incorrect command line usage is signalled in a subcommand, print nothing and propagate the exception. 
+              case t: IncorrectCommandLineUsageInSubcommand =>
+                IO.raiseError(t)
+              // If we are in the main command there was an exception during execution, print message to std err and propagate the exception. 
+              case t =>
+                IO(err.print(t.getMessage)) *> IO.raiseError(t)
+            }
       }
     } yield r
 
@@ -450,6 +469,7 @@ trait PicocliCommandLineParser {
                 case Some(r) =>
                   r
                 case None =>
+                  // Unlike for the main command, we can't access the root cause for some reason 
                   IO.raiseError(CommandLineParsingFailedForSubcommand(subcommand.name, new RuntimeException))
               }
             )
