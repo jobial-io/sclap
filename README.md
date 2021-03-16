@@ -598,8 +598,8 @@ Sclap is modular with the following components:
   library and exposes a fairly reusable API.
 * **sclap-examples:** Example apps.
 
-Sclap relies on the Free monad class from cats-free to implement the DSL to describe the command line interface. The DSL
-is used in two passes: the first pass builds the command line interface structure, which is then used in a second pass
+Sclap relies on the Free monad class from cats-free to implement the DSL that describes the command line interface. The DSL
+is used in two phases: the first pass builds the command line interface structure, which is then used in a second pass
 to parse the actual arguments passed to the app and bind the results to the values in the monadic expression, or to
 generate the command line usage text in case of a failure or if --help is requested. The application logic is
 represented as an IO monad, which comes from cats-effect. By describing the application logic in a referentially

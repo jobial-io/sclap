@@ -38,8 +38,6 @@ lazy val root: Project = project
   .in(file("."))
   .settings(commonSettings)
   .settings(
-    publishArtifact := false,
-    publishArtifact in makePom := true
   )
   .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app`)
