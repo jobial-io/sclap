@@ -15,7 +15,7 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.4")
-ThisBuild / version := "0.9.7"
+ThisBuild / version := "0.9.8"
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
@@ -27,6 +27,7 @@ lazy val commonSettings = Seq(
   sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
   organizationName := "Jobial OÜ",
   licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  description := "Scala command line apps made simple - a composable and easy-to-use CLI parser built on Cats"
 )
 
 lazy val CatsVersion = "2.0.0"
@@ -38,6 +39,7 @@ lazy val root: Project = project
   .in(file("."))
   .settings(commonSettings)
   .settings(
+    name := "sclap"
   )
   .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app`)
