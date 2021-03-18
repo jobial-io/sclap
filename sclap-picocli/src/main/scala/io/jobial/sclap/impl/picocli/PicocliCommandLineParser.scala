@@ -252,8 +252,17 @@ trait PicocliCommandLineParser {
               ctx.updateSpec { spec =>
                 if (!ctx.subcommand)
                   command.name.orElse(ctx.command.name).map(spec.name(_))
+
+                command.headerHeading.map(spec.usageMessage.headerHeading(_))
+                command.synopsisHeading.map(spec.usageMessage.synopsisHeading(_))
+                command.descriptionHeading.map(spec.usageMessage.descriptionHeading(_))
+                command.parameterListHeading.map(spec.usageMessage.parameterListHeading(_))
+                command.optionListHeading.map(spec.usageMessage.optionListHeading(_))
+                command.commandListHeading.map(spec.usageMessage.commandListHeading(_))
+                command.footerHeading.map(spec.usageMessage.footerHeading(_))
                 command.header.map(spec.usageMessage.header(_))
                 command.description.map(spec.usageMessage.description(_))
+
                 spec
               }
             }

@@ -18,10 +18,12 @@ import cats.effect.IO
 object ArithmeticExample extends CommandLineApp {
 
   def add =
-    for {
-      a <- opt[Int]("-a").required
-      b <- opt[Int]("-b").required
-    } yield IO(a + b)
+    command.header("Add two numbers") {
+      for {
+        a <- opt[Int]("-a").required
+        b <- opt[Int]("-b").required
+      } yield IO(a + b)
+    }
 
   def sub =
     for {

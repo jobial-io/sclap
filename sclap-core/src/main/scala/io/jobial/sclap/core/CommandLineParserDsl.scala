@@ -413,7 +413,14 @@ case class Command(
   version: Option[String] = None,
   clusteredShortOptionsAllowed: Boolean = true,
   prefixLongOptionsWith: Option[String] = Some("--"),
-  prefixShortOptionsWith: Option[String] = Some("-")
+  prefixShortOptionsWith: Option[String] = Some("-"),
+  headerHeading: Option[String] = None,
+  synopsisHeading: Option[String] = None,
+  descriptionHeading: Option[String] = None,
+  parameterListHeading: Option[String] = None,
+  optionListHeading: Option[String] = None,
+  commandListHeading: Option[String] = None,
+  footerHeading: Option[String] = None
 ) {
 
   def name(value: String): Command =
@@ -436,6 +443,27 @@ case class Command(
 
   def prefixShortOptionsWith(value: Option[String]): Command =
     copy(prefixShortOptionsWith = value)
+
+  def headerHeading(value: Option[String]): Command =
+    copy(headerHeading = value)
+
+  def synopsisHeading(value: Option[String]): Command =
+    copy(synopsisHeading = value)
+
+  def descriptionHeading(value: Option[String]): Command =
+    copy(descriptionHeading = value)
+
+  def parameterListHeading(value: Option[String]): Command =
+    copy(parameterListHeading = value)
+
+  def optionListHeading(value: Option[String]): Command =
+    copy(optionListHeading = value)
+
+  def commandListHeading(value: Option[String]): Command =
+    copy(commandListHeading = value)
+
+  def footerHeading(value: Option[String]): Command =
+    copy(footerHeading = value)
 
   def version(value: String): Command =
     copy(version = Some(value))

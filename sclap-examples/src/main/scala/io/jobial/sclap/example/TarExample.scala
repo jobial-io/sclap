@@ -20,13 +20,16 @@ object TarExample extends CommandLineApp {
     println(s"tar create $create verbose $verbose file $file")
 
   def run =
-    command.clusteredShortOptionsAllowed(false) {
-      for {
-        create <- opt[Boolean]("c")
-        verbose <- opt[Boolean]("v")
-        file <- opt[String]("f").alias("file")
-      } yield
-        tar(create, verbose, file)
-    }
+    command
+      .header("Tar Archive")
+      .description("This is a utility to manage tar archives.")
+      .clusteredShortOptionsAllowed(false) {
+        for {
+          create <- opt[Boolean]("c")
+          verbose <- opt[Boolean]("v")
+          file <- opt[String]("f").alias("file")
+        } yield
+          tar(create, verbose, file)
+      }
 
 }
