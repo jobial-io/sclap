@@ -12,12 +12,10 @@
  */
 package io.jobial.sclap.core
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.free.Free._
 import io.jobial.sclap.core.implicits.ioExtraOps
 
-import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 
@@ -33,33 +31,11 @@ trait CommandLineParserDsl {
    * @tparam T The type of the option value.
    * @return
    */
-  def opt[T: ArgumentValueParser](name: String) =
-    Opt[T](name)
-
-  def opt[T: ArgumentValueParser](names: NonEmptyList[String]) =
-    Opt[T](names.head).aliases(names.tail: _*)
-
-  /**
-   * Specifies a command line option with the given name and a default value if not specified on the command line. The
-   * result is of type T because it is always present (either a value is specified by the caller or the default
-   * value).
-   *
-   * @param name
-   * @param defaultValue
-   * @tparam T
-   * @return
-   */
-  def opt[T: ArgumentValueParser : ArgumentValuePrinter](name: String, defaultValue: T) =
-    OptWithDefaultValue(name, defaultValue)
-
-  def opt[T: ArgumentValueParser : ArgumentValuePrinter](names: NonEmptyList[String], defaultValue: T) =
-    OptWithDefaultValue(names.head, defaultValue).aliases(names.tail: _*)
+  def opt[T: ArgumentValueParser](name: String, aliases: String*) =
+    Opt[T](name).aliases(aliases: _*)
 
   def param[T: ArgumentValueParser] =
     Param[T]()
-
-  def param[T: ArgumentValueParser : ArgumentValuePrinter](defaultValue: T) =
-    ParamWithDefaultValue[T](defaultValue)
 
   /**
    * Adds an existing command as a subcommand in the current command line context. More technically, it lifts 

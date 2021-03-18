@@ -26,5 +26,5 @@ object FutureExample extends CommandLineApp {
     } yield Future {
       println(s"hello $hello")
     }
-    
+
 }

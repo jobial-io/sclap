@@ -12,7 +12,6 @@
  */
 package io.jobial.sclap.example
 
-import cats.data.NonEmptyList
 import io.jobial.sclap.CommandLineApp
 
 object LsExample extends CommandLineApp {
@@ -22,7 +21,7 @@ object LsExample extends CommandLineApp {
 
   def run =
     for {
-      long <- opt(NonEmptyList.of("long", "l"), false).description("Long format")
+      long <- opt[Boolean]("long", "l").defaultValue(false).description("Long format")
       dirname <- param[String].paramLabel("<dir>").description("The directory.")
     } yield
       myLs(long, dirname)

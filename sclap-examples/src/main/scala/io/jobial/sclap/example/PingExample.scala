@@ -20,15 +20,15 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt("count", 10).description("Number of packets")
-      timeout <- opt("timeout", 5.seconds).description("The timeout")
+      count <- opt[Int]("count").defaultValue(10).description("Number of packets")
+      timeout <- opt[Duration]("timeout").defaultValue(5.seconds).description("The timeout")
       timeToLive <- opt[Int]("ttl").description("Time to live")
       host <- param[String].paramLabel("<hostname>")
         .description("The host").required
     } yield
       myPing(host, count, timeout, timeToLive)
 
-  def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
+  def myPing(host: String, count: Int, timeout: Duration, timeToLive: Option[Int]) =
     println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
 
 }

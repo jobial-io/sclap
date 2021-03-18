@@ -22,5 +22,5 @@ object HelloExample extends CommandLineApp {
       hello <- opt[String]("--hello")
     } yield
       println(s"hello $hello")
-      
+
 }

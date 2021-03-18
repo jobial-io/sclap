@@ -68,7 +68,7 @@ trait CommandLineParserFutureTestBase
     val spec: CommandLine[Int] =
       for {
         a <- opt[String]("a")
-        b <- opt("b", 1)
+        b <- opt[Int]("b").defaultValue(1)
       } yield futureForCounter(counter)
 
     runCommandLineTestCases(spec)(
@@ -88,7 +88,7 @@ trait CommandLineParserFutureTestBase
     val spec: CommandLine[Int] =
       for {
         a <- opt[String]("a")
-        b <- opt("b", 1)
+        b <- opt[Int]("b").defaultValue(1)
         s <- sub
       } yield futureForCounter(counter)
 

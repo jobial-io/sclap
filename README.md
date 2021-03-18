@@ -10,15 +10,14 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt("count", 10).description("Number of packets")
-      timeout <- opt("timeout", 5.seconds).description("The timeout")
+      count <- opt[Int]("count").defaultValue(10).description("Number of packets")
+      timeout <- opt[Duration]("timeout").defaultValue(5.seconds).description("The timeout")
       timeToLive <- opt[Int]("ttl").description("Time to live")
-      host <- param[String].paramLabel("<hostname>")
-        .description("The host").required
+      host <- param[String].paramLabel("<hostname>").description("The host").required
     } yield
       myPing(host, count, timeout, timeToLive)
 
-  def myPing(host: String, count: Int, timeout: FiniteDuration, timeToLive: Option[Int]) =
+  def myPing(host: String, count: Int, timeout: Duration, timeToLive: Option[Int]) =
     println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
 
 }
@@ -74,7 +73,6 @@ Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
 
 Of course, these examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
 you can execute it on the command line as `PingExample`.
-
 
 A few things to note here:
 
@@ -176,7 +174,8 @@ or
 hello Some(world)
 ```
 
-You can find this example along with many other more complex ones [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
+You can find this example along with many other more complex
+ones [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
 
 To use Sclap you need to add
 
@@ -209,7 +208,6 @@ which produces the usage:
 
 ...
 
-
 ## Positional parameters and options
 
 ## Command header and description
@@ -223,7 +221,7 @@ object CommandWithHeaderExample extends CommandLineApp {
     command.header("Hello World")
       .description("Just say hello") {
         for {
-          hello <- opt("--hello", "world")
+          hello <- opt[String]("--hello").defaultValue("world")
         } yield
           println(s"hello $hello")
       }
@@ -329,7 +327,7 @@ object ErrorExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt("--hello", "world")
+      hello <- opt[String]("--hello").defaultValue("world")
     } yield
       IO.raiseError(new RuntimeException("an error occurred..."))
 
@@ -353,7 +351,7 @@ object ExceptionExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt("--hello", "world")
+      hello <- opt[String]("--hello").defaultValue("world")
     } yield
       throw new RuntimeException("an error occurred...")
 
@@ -386,7 +384,7 @@ import concurrent.Future
 
 def run =
   for {
-    hello <- opt("--hello", "world")
+    hello <- opt[String]("--hello").defaultValue("world")
   } yield Future {
     println(s"hello $hello")
   }
@@ -401,7 +399,7 @@ import concurrent.Future
 
 def run =
   for {
-    hello <- opt("--hello", "world")
+    hello <- opt[String]("--hello", "world")
   } yield Future {
     throw new RuntimeException("there was an error...")
   }
@@ -425,7 +423,7 @@ import util.Try
 
 def run =
   for {
-    hello <- opt("--hello", "world")
+    hello <- opt[String]("--hello").defaultValue("world")
   } yield Try {
     println(s"hello $hello")
   }
@@ -436,7 +434,7 @@ import util.Either
 
 def run =
   for {
-    hello <- opt("--hello")
+    hello <- opt[String]("--hello")
   } yield hello match {
     case Some(hello) =>
       Right(hello)
@@ -477,7 +475,7 @@ object DateExample extends CommandLineApp {
 
   def run =
     for {
-      d <- opt("date", LocalDate.now).description("The date")
+      d <- opt[LocalDate]("date").defaultValue(LocalDate.now).description("The date")
     } yield
       println(s"date: $d")
 }
@@ -516,7 +514,8 @@ def run =
   command(name = "my-app").description("My really cool app.") {
     for {
       o <- opt(...)
-    } yield ...
+    } yield
+    ...
   }
 ```
 
@@ -598,9 +597,9 @@ Sclap is modular with the following components:
   library and exposes a fairly reusable API.
 * **sclap-examples:** Example apps.
 
-Sclap relies on the Free monad class from cats-free to implement the DSL that describes the command line interface. The DSL
-is used in two phases: the first pass builds the command line interface structure, which is then used in a second pass
-to parse the actual arguments passed to the app and bind the results to the values in the monadic expression, or to
+Sclap relies on the Free monad class from cats-free to implement the DSL that describes the command line interface. The
+DSL is used in two phases: the first pass builds the command line interface structure, which is then used in a second
+pass to parse the actual arguments passed to the app and bind the results to the values in the monadic expression, or to
 generate the command line usage text in case of a failure or if --help is requested. The application logic is
 represented as an IO monad, which comes from cats-effect. By describing the application logic in a referentially
 transparent manner, it is possible to evaluate the command line description multiple times without any side effects (
