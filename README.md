@@ -36,7 +36,7 @@ Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostnam
       --ttl=PARAM       Time to live.
 ```
 
-or if you have a colour terminal, you should get something like:
+or on a colour terminal you should get something like:
 
 ![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/sclap-examples/pingExampleScreenshot.png)
 
@@ -215,22 +215,29 @@ which produces the usage:
 ```scala
 import io.jobial.sclap.CommandLineApp
 
-object CommandWithHeaderExample extends CommandLineApp {
+object HelloWorldExample extends CommandLineApp {
 
   def run =
     command.header("Hello World")
-      .description("Just say hello") {
+      .description("A hello world app with one option.") {
         for {
-          hello <- opt[String]("--hello").defaultValue("world")
+          hello <- opt[String]("hello").defaultValue("world")
         } yield
           println(s"hello $hello")
       }
 }
 ```
 
-```
-> CommandWithHeaderExample --help
+which produces the usage help:
 
+```
+> HelloWorldExample --help
+
+Hello World
+Usage: HelloWorldExample [-h] [--hello=PARAM]
+A hello world app with one option.
+  -h, --help          Show this help message and exit.
+      --hello=PARAM   (default: world).
 ```
 
 ## Subcommands
@@ -505,8 +512,8 @@ def run =
 
 ### Overriding the app name
 
-The name of the app printed in the usage help is derived from the main class name by default. It can be overridden
-either by specifying using the
+The name of the app printed in the usage help is derived from the main class name by default. It can be overridden by
+using either the syntax
 
 ```scala
 
@@ -519,7 +526,7 @@ def run =
   }
 ```
 
-syntax or by setting the `app.name` system property:
+or by setting the `app.name` system property:
 
 ```
 java -Dapp.name=my-app ...
@@ -533,7 +540,7 @@ java -Dapp.name=my-app ...
 
 Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests against your CLI specs:
 
-## Further Examples
+## List of examples
 
 ...
 
@@ -541,9 +548,9 @@ Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests ag
 
 ### Anatomy
 
-Here are a few pointers on the internal structure of a command line description in Sclap. An application typically
-implements the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats
-Effect's `IOApp`. The app has to implement the
+Here are a few pointers on the structure of the command line description in Sclap. An application typically implements
+the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats Effect's `IOApp`
+. The app has to implement the
 
 ```scala
 def run: CommandLine[Any]
@@ -573,7 +580,7 @@ def run =
   }
 ```
 
-which is just a usual monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
+which is just a monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
 comprehension binds the options and parameters to names, and the yield section returns the application logic. As
 mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
 library to process the description safely, without any side-effects. To make it more convenient for applications that do
@@ -605,7 +612,7 @@ represented as an IO monad, which comes from cats-effect. By describing the appl
 transparent manner, it is possible to evaluate the command line description multiple times without any side effects (
 like running actual application logic, for example).
 
-## Implicits
+### Implicits
 
 Sclap relies on a few carefully designed implicits to make the syntax more concise. If you want to override the defaults
 or have an aversion to implicits, you can always choose to not include the built-in ones in your code by extending the
