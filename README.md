@@ -36,7 +36,7 @@ Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostnam
       --ttl=PARAM       Time to live.
 ```
 
-or on a colour terminal you should get something like:
+On a colour terminal you should get something like:
 
 ![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/sclap-examples/pingExampleScreenshot.png)
 

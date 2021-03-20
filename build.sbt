@@ -14,7 +14,7 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.4")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.5")
 ThisBuild / version := "1.0.0"
 
 import sbt.Keys.{description, publishConfiguration}
