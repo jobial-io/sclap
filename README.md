@@ -351,7 +351,7 @@ an error occurred...
 
 ### What if my code throws Exceptions?
 
-Since the application code in yield is always wrapped in an IO, an exception thrown will result in an IO with an error
+Since the application code in yield is always wrapped in an IO, an exception will result in an IO with an error
 state exactly the same way as above:
 
 ```scala
@@ -469,6 +469,7 @@ import io.jobial.sclap.CommandLineApp
 import io.jobial.sclap.core.{ArgumentValueParser, ArgumentValuePrinter}
 import java.time.LocalDate
 import scala.util.Try
+import cats.effect.IO
 
 object DateExample extends CommandLineApp {
 
@@ -489,7 +490,7 @@ object DateExample extends CommandLineApp {
     for {
       d <- opt[LocalDate]("date").defaultValue(LocalDate.now).description("The date")
     } yield
-      println(s"date: $d")
+      IO(println(s"date: $d"))
 }
 ```
 
@@ -510,7 +511,7 @@ def run =
   for {
     a <- args
   } yield
-    println(a) // a is a Seq[String] with all the arguments
+    IO(println(a)) // a is a Seq[String] with all the arguments
 ```
 
 ## Customizing the usage help format
