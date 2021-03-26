@@ -273,7 +273,7 @@ object ArithmeticExample extends CommandLineApp {
       subResult <- subcommand("sub")(sub)
     } yield for {
       r <- addResult orElse subResult
-    } yield println(r)
+    } yield IO(println(r))
 }
 ```
 
@@ -411,7 +411,7 @@ import concurrent.Future
 
 def run =
   for {
-    hello <- opt[String]("--hello", "world")
+    hello <- opt[String]("--hello").defaultValue("world")
   } yield Future {
     throw new RuntimeException("there was an error...")
   }
@@ -426,7 +426,7 @@ there was an error...
 
 with a non-zero exit code.
 
-### How about returning a Try or Either?
+### How about returning a Try or an Either?
 
 You can return a Try or an Either as well:
 
