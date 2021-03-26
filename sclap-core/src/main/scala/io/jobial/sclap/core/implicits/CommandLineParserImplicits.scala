@@ -32,9 +32,6 @@ trait CommandLineParserImplicits {
   implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) =
     IO.fromFuture(IO(f))(IO.contextShift(ec))
 
-  implicit def fromAny[A](a: => A): IO[A] =
-    IO(a)
-
   implicit def commandLineFromIO[A](result: IO[A]) = NoSpec[A](result).build
 
   implicit def commandLineFromFuture[A](result: => Future[A])(implicit ec: ExecutionContext) = NoSpec[A](result).build

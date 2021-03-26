@@ -5,6 +5,7 @@ An example speaks more than a thousand words:
 ```scala
 import io.jobial.sclap.CommandLineApp
 import scala.concurrent.duration._
+import cats.effect.IO
 
 object PingExample extends CommandLineApp {
 
@@ -18,7 +19,7 @@ object PingExample extends CommandLineApp {
       myPing(host, count, timeout, timeToLive)
 
   def myPing(host: String, count: Int, timeout: Duration, timeToLive: Option[Int]) =
-    println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
+    IO(println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl..."))
 
 }
 ```
@@ -144,6 +145,7 @@ well maintained and stable library that is feature rich enough to cover all the 
 
 ```scala
 import io.jobial.sclap.CommandLineApp
+import cats.effect.IO
 
 object HelloExample extends CommandLineApp {
 
@@ -151,7 +153,7 @@ object HelloExample extends CommandLineApp {
     for {
       hello <- opt[String]("hello")
     } yield
-      println(s"hello $hello")
+      IO(println(s"hello $hello"))
 
 }
 ```
@@ -181,7 +183,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.0.0"
+  "io.jobial" %% "sclap" % "1.0.1"
 )
 ```
 
@@ -192,7 +194,7 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
@@ -214,6 +216,7 @@ which produces the usage:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
+import cats.effect.IO
 
 object HelloWorldExample extends CommandLineApp {
 
@@ -223,7 +226,7 @@ object HelloWorldExample extends CommandLineApp {
         for {
           hello <- opt[String]("hello").defaultValue("world")
         } yield
-          println(s"hello $hello")
+          IO(println(s"hello $hello"))
       }
 }
 ```
@@ -353,14 +356,16 @@ state exactly the same way as above:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
+import cats.effect.IO
 
 object ExceptionExample extends CommandLineApp {
 
   def run =
     for {
       hello <- opt[String]("--hello").defaultValue("world")
-    } yield
+    } yield IO {
       throw new RuntimeException("an error occurred...")
+    }
 
 }
 ```

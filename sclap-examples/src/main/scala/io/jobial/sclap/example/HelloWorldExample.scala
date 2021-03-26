@@ -1,5 +1,6 @@
 package io.jobial.sclap.example
 
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 
 object HelloWorldExample extends CommandLineApp {
@@ -9,7 +10,8 @@ object HelloWorldExample extends CommandLineApp {
       .description("A hello world app with one option.") {
         for {
           hello <- opt[String]("hello").defaultValue("world")
-        } yield
+        } yield IO {
           println(s"hello $hello")
+        }
       }
 }

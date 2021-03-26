@@ -12,6 +12,7 @@
  */
 package io.jobial.sclap.example
 
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 
 object LsExample extends CommandLineApp {
@@ -23,7 +24,8 @@ object LsExample extends CommandLineApp {
     for {
       long <- opt[Boolean]("long", "l").defaultValue(false).description("Long format")
       dirname <- param[String].paramLabel("<dir>").description("The directory.")
-    } yield
+    } yield IO {
       myLs(long, dirname)
+    }
 
 }

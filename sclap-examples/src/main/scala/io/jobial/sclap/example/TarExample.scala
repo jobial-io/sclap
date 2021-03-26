@@ -12,6 +12,7 @@
  */
 package io.jobial.sclap.example
 
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 
 object TarExample extends CommandLineApp {
@@ -28,8 +29,9 @@ object TarExample extends CommandLineApp {
           create <- opt[Boolean]("c")
           verbose <- opt[Boolean]("v")
           file <- opt[String]("f").alias("file")
-        } yield
+        } yield IO {
           tar(create, verbose, file)
+        }
       }
 
 }

@@ -1,6 +1,7 @@
 package io.jobial.sclap.example
 
 import cats.Show
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 import io.jobial.sclap.core.ArgumentValueParser
 
@@ -22,6 +23,7 @@ object DateFromShowExample extends CommandLineApp {
   def run =
     for {
       d <- opt("date").defaultValue(LocalDate.now).description("The date")
-    } yield
+    } yield IO {
       println(s"date: $d")
+    }
 }

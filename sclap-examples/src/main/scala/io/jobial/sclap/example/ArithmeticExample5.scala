@@ -12,6 +12,7 @@
  */
 package io.jobial.sclap.example
 
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 import io.jobial.sclap.core.ArgumentValueParser
 
@@ -23,7 +24,7 @@ object ArithmeticExample5 extends CommandLineApp {
       for {
         a <- param[T].required
         b <- param[T].required
-      } yield op(a, b)
+      } yield IO(op(a, b))
     }
 
   def run =

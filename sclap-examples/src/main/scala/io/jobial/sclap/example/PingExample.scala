@@ -12,6 +12,7 @@
  */
 package io.jobial.sclap.example
 
+import cats.effect.IO
 import io.jobial.sclap.CommandLineApp
 
 import scala.concurrent.duration._
@@ -25,8 +26,9 @@ object PingExample extends CommandLineApp {
       timeToLive <- opt[Int]("ttl").description("Time to live")
       host <- param[String].paramLabel("<hostname>")
         .description("The host").required
-    } yield
+    } yield IO {
       myPing(host, count, timeout, timeToLive)
+    }
 
   def myPing(host: String, count: Int, timeout: Duration, timeToLive: Option[Int]) =
     println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl...")
