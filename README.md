@@ -81,9 +81,9 @@ A few things to note here:
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
   because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
-  available. Also, the type of timeout is inferred from the default value. By being type safe, there is virtually no
+  available. By being type safe, there is virtually no
   possibility of ending up with options and parameters being in an "illegal state". You can be sure your opts and params
-  are always valid in your application logic, otherwise Sclap will catch the problem before it reaches your code and
+  are always valid and available in your application logic, otherwise Sclap will catch the problem before it reaches your code and
   handles the error appropriately (for example, it returns an error exit code and prints the error and usage messages).
 
 
@@ -554,7 +554,7 @@ Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests ag
 
 ### Anatomy
 
-Here are a few pointers on the structure of the command line description in Sclap. An application typically implements
+A few pointers on the structure of the command line description in Sclap. An application typically implements
 the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats Effect's `IOApp`
 . The app has to implement the
 
@@ -587,10 +587,10 @@ def run =
 ```
 
 which is just a monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
-comprehension binds the options and parameters to names, and the yield section returns the application logic. As
+comprehension binds the option and parameter values to names, and the yield section returns the application logic. As
 mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
 library to process the description safely, without any side-effects. To make it more convenient for applications that do
-not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Any`) into an
+not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Either`) into an
 IO context in a referentially transparent way (of course, the rest of your code will not become referentially
 transparent).
 
@@ -598,10 +598,10 @@ Sclap does not rely on any macros.
 
 ### Modules
 
-Sclap is modular with the following components:
+Sclap is modular and comes with the following artifacts:
 
 * **sclap-core:** defines the DSL, built on cats-free and cats-effect; the DSL is implementation independent, leaving it
-  open for alternative parser implementations and making it more future proof in case the default parser impl (which
+  open for alternative parser implementations and making it future proof in case the default parser impl (which
   currently uses Picocli) becomes obsolete or unmaintained. An implementor has to implement the `executeCommandLine`
   function which takes the `CommandLine` description along with the command line args as arguments.
 * **sclap-app:** provides the `CommandLineApp` trait and other helper functionality.
@@ -625,6 +625,8 @@ or have an aversion to implicits, you can always choose to not include the built
 `CommandLineAppNoImplicits` trait instead and cherry-pick the implicits you need separately. If you decide not to use
 any of the implicits provided by the library, the syntax becomes slightly more verbose but still manageable. Here is an
 example:
+
+...
 
 ## Implementation dependent extensions
 
