@@ -9,7 +9,7 @@ object HelloWorldExample extends CommandLineApp {
     command.header("Hello World")
       .description("A hello world app with one option.") {
         for {
-          hello <- opt[String]("hello").defaultValue("world")
+          hello <- opt[String]("hello").default("world")
         } yield IO {
           println(s"hello $hello")
         }

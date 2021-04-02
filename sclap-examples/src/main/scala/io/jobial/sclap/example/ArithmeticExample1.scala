@@ -21,8 +21,8 @@ object ArithmeticExample1 extends CommandLineApp {
 
   def operation(op: (Int, Int) => Int): CommandLine[Int] =
     for {
-      a <- opt[Int]("-a").required
-      b <- opt[Int]("-b").required
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
     } yield IO(op(a, b))
 
   def run =

@@ -20,27 +20,27 @@ object ArithmeticExample extends CommandLineApp {
   def add =
     command.header("Add two numbers") {
       for {
-        a <- opt[Int]("-a").required
-        b <- opt[Int]("-b").required
+        a <- opt[Int]("a").required
+        b <- opt[Int]("b").required
       } yield IO(a + b)
     }
 
   def sub =
     for {
-      a <- opt[Int]("-a").required
-      b <- opt[Int]("-b").required
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
     } yield IO(a - b)
 
   def mul =
     for {
-      a <- opt[Int]("-a").required
-      b <- opt[Int]("-b").required
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
     } yield IO(a * b)
 
   def div =
     for {
-      a <- opt[Int]("-a").required
-      b <- opt[Int]("-b").required
+      a <- opt[Int]("a").required
+      b <- opt[Int]("b").required
     } yield IO(a / b)
 
   def run =

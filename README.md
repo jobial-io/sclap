@@ -77,7 +77,7 @@ you can execute it on the command line as `PingExample`.
 
 A few things to note here:
 
-* Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is an `Option[Int]`
+* **Type safety**: Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is an `Option[Int]`
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
   because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
@@ -87,7 +87,7 @@ A few things to note here:
   it returns an error exit code and prints the error and usage messages).
 
 
-* Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
+* **Custom type support**: Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
   easily add support for further types (or override the defaults) by implementing instances of the `ArgumentValueParser`
   and `ArgumentValuePrinter` type classes (see examples later).
 
@@ -125,7 +125,7 @@ don't need to know any of those libraries to use it. Sclap can be used seamlessl
 applications as well. It comes with:
 
 * Automatic, fully customizable usage help generation
-* Completely type safe access to command line options and parameters in your application code
+* Type safe access to command line options and parameters in your application code
 * Support for custom type arguments
 * ANSI colours
 * Bash and ZSH autocomplete script generation

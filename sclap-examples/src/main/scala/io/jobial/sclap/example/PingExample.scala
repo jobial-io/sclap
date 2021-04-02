@@ -21,8 +21,8 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt[Int]("count").defaultValue(10).description("Number of packets")
-      timeout <- opt[Duration]("timeout").defaultValue(5.seconds).description("The timeout")
+      count <- opt[Int]("count").default(10).description("Number of packets")
+      timeout <- opt[Duration]("timeout").default(5.seconds).description("The timeout")
       timeToLive <- opt[Int]("ttl").description("Time to live")
       host <- param[String].label("<hostname>")
         .description("The host").required

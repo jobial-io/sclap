@@ -22,7 +22,7 @@ object LsExample extends CommandLineApp {
 
   def run =
     for {
-      long <- opt[Boolean]("long", "l").defaultValue(false).description("Long format")
+      long <- opt[Boolean]("long", "l").default(false).description("Long format")
       dirname <- param[String].label("<dir>").description("The directory.")
     } yield IO {
       myLs(long, dirname)

@@ -21,7 +21,7 @@ object TryExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt[String]("--hello")
+      hello <- opt[String]("hello")
     } yield Try {
       println(s"hello $hello")
     }

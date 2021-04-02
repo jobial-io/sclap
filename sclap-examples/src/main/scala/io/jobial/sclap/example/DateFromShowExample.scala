@@ -22,7 +22,7 @@ object DateFromShowExample extends CommandLineApp {
 
   def run =
     for {
-      d <- opt("date").defaultValue(LocalDate.now).description("The date")
+      d <- opt("date").default(LocalDate.now).description("The date")
     } yield IO {
       println(s"date: $d")
     }
