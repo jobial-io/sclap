@@ -77,7 +77,8 @@ you can execute it on the command line as `PingExample`.
 
 A few things to note here:
 
-* **Type safety**: Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is an `Option[Int]`
+* **Type safety**: Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is
+  an `Option[Int]`
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
   because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
@@ -87,8 +88,9 @@ A few things to note here:
   it returns an error exit code and prints the error and usage messages).
 
 
-* **Custom type support**: Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
-  easily add support for further types (or override the defaults) by implementing instances of the `ArgumentValueParser`
+* **Custom type support**: Sclap has built-in support for common argument value types (`String`, `Int`, `Double`
+  , `Duration`, ...). You can easily add support for further types (or override the defaults) by implementing instances
+  of the `ArgumentValueParser`
   and `ArgumentValuePrinter` type classes (see examples later).
 
 
@@ -402,7 +404,15 @@ def run =
   }
 ```
 
-Of course, the `Future` gets executed only if Sclap could parse the arguments successfully.
+It should produce:
+
+```
+> HelloExample
+
+hello world
+```
+
+Of course, the `Future` gets executed only if Sclap could parse the arguments successfully and help is not requested.
 
 Errors are handled as expected:
 
@@ -548,7 +558,7 @@ Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests ag
 
 ## List of examples
 
-...
+You can find more examples [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
 
 ## How does it work?
 
@@ -638,4 +648,3 @@ provides extensions to Opts and Params that allow access to the underlying Build
 opt(...).withPicocliBuilder(_.hidden(true))
 ```
 
-[here]: https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example
