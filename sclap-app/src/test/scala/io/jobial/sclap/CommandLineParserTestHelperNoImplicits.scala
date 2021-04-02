@@ -55,7 +55,7 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         val err = new ByteArrayOutputStream
         val checkResult =
           for {
-            result <- executeCommandLine(spec, t.args, new PrintStream(out), new PrintStream(err))
+            result <- executeCommandLine(spec, t.args.toList, new PrintStream(out), new PrintStream(err))
               .redeem(Left[Throwable, A](_), Right(_))
             r <- t.check.assertion(TestResult(result, out.toString, err.toString))
           } yield r

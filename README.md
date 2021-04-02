@@ -11,10 +11,10 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt[Int]("count").defaultValue(10).description("Number of packets")
-      timeout <- opt[Duration]("timeout").defaultValue(5.seconds).description("The timeout")
+      count <- opt[Int]("count").default(10).description("Number of packets")
+      timeout <- opt[Duration]("timeout").default(5.seconds).description("The timeout")
       timeToLive <- opt[Int]("ttl").description("Time to live")
-      host <- param[String].paramLabel("<hostname>").description("The host").required
+      host <- param[String].label("<hostname>").description("The host").required
     } yield
       myPing(host, count, timeout, timeToLive)
 
@@ -81,10 +81,10 @@ A few things to note here:
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
   because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
-  available. By being type safe, there is virtually no
-  possibility of ending up with options and parameters being in an "illegal state". You can be sure your opts and params
-  are always valid and available in your application logic, otherwise Sclap will catch the problem before it reaches your code and
-  handles the error appropriately (for example, it returns an error exit code and prints the error and usage messages).
+  available. By being type safe, there is virtually no possibility of ending up with options and parameters being in
+  an "illegal state". You can be sure your opts and params are always valid and available in your application logic,
+  otherwise Sclap will catch the problem before it reaches your code and handles the error appropriately (for example,
+  it returns an error exit code and prints the error and usage messages).
 
 
 * Sclap has built-in support for common argument value types (`String`, `Int`, `Double`, `Duration`, ...). You can
@@ -121,7 +121,7 @@ line is still king and writing command line tools should be straightforward and 
 
 Although Sclap is built on
 **Cats**, **Cats Effect** and **Cats Free** in a purely functional style and combines best with the Cats ecosystem, you
-don't need to know any of those libraries to depend on it. Sclap can be used seamlessly in non-Cats based or non-FP
+don't need to know any of those libraries to use it. Sclap can be used seamlessly in non-Cats based or non-FP
 applications as well. It comes with:
 
 * Automatic, fully customizable usage help generation
@@ -183,7 +183,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.0.1"
+  "io.jobial" %% "sclap" % "1.1.0"
 )
 ```
 
@@ -194,7 +194,7 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -224,7 +224,7 @@ object HelloWorldExample extends CommandLineApp {
     command.header("Hello World")
       .description("A hello world app with one option.") {
         for {
-          hello <- opt[String]("hello").defaultValue("world")
+          hello <- opt[String]("hello").default("world")
         } yield
           IO(println(s"hello $hello"))
       }
@@ -337,7 +337,7 @@ object ErrorExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt[String]("--hello").defaultValue("world")
+      hello <- opt[String]("hello").default("world")
     } yield
       IO.raiseError(new RuntimeException("an error occurred..."))
 
@@ -351,8 +351,8 @@ an error occurred...
 
 ### What if my code throws Exceptions?
 
-Since the application code in yield is always wrapped in an IO, an exception will result in an IO with an error
-state exactly the same way as above:
+Since the application code in yield is always wrapped in an IO, an exception will result in an IO with an error state
+exactly the same way as above:
 
 ```scala
 import io.jobial.sclap.CommandLineApp
@@ -362,7 +362,7 @@ object ExceptionExample extends CommandLineApp {
 
   def run =
     for {
-      hello <- opt[String]("--hello").defaultValue("world")
+      hello <- opt[String]("hello").default("world")
     } yield IO {
       throw new RuntimeException("an error occurred...")
     }
@@ -396,7 +396,7 @@ import concurrent.Future
 
 def run =
   for {
-    hello <- opt[String]("--hello").defaultValue("world")
+    hello <- opt[String]("hello").default("world")
   } yield Future {
     println(s"hello $hello")
   }
@@ -411,7 +411,7 @@ import concurrent.Future
 
 def run =
   for {
-    hello <- opt[String]("--hello").defaultValue("world")
+    hello <- opt[String]("hello").default("world")
   } yield Future {
     throw new RuntimeException("there was an error...")
   }
@@ -435,7 +435,7 @@ import util.Try
 
 def run =
   for {
-    hello <- opt[String]("--hello").defaultValue("world")
+    hello <- opt[String]("hello").default("world")
   } yield Try {
     println(s"hello $hello")
   }
@@ -446,7 +446,7 @@ import util.Either
 
 def run =
   for {
-    hello <- opt[String]("--hello")
+    hello <- opt[String]("hello")
   } yield hello match {
     case Some(hello) =>
       Right(hello)
@@ -488,7 +488,7 @@ object DateExample extends CommandLineApp {
 
   def run =
     for {
-      d <- opt[LocalDate]("date").defaultValue(LocalDate.now).description("The date")
+      d <- opt[LocalDate]("date").default(LocalDate.now).description("The date")
     } yield
       IO(println(s"date: $d"))
 }
@@ -590,11 +590,11 @@ which is just a monadic expression using the `CommandLineArgSpec` Free monad men
 comprehension binds the option and parameter values to names, and the yield section returns the application logic. As
 mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
 library to process the description safely, without any side-effects. To make it more convenient for applications that do
-not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Either`) into an
-IO context in a referentially transparent way (of course, the rest of your code will not become referentially
+not use Cats Effect, Sclap provides safe implicits to lift other common return types (`Future`, `Try` or `Either`) into
+an IO context in a referentially transparent way (of course, the rest of your code will not become referentially
 transparent).
 
-Sclap does not rely on any macros.
+No macros used or animals harmed in the making of Sclap.
 
 ### Modules
 

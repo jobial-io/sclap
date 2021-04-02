@@ -27,7 +27,7 @@ class CommandLineParserTest
   "opt without default value test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a").alias("long")
+        a <- opt[String]("a", "long")
       } yield IO {
         a
       }
@@ -105,8 +105,8 @@ class CommandLineParserTest
     val spec =
       for {
         a <- param[String]
-        b <- param[String].paramLabel("PARAM1")
-        c <- param[String].paramLabel("PARAM2").description("This is PARAM2.")
+        b <- param[String].label("PARAM1")
+        c <- param[String].label("PARAM2").description("This is PARAM2.")
       } yield IO {
         (a, b, c)
       }
@@ -130,8 +130,8 @@ class CommandLineParserTest
     val spec =
       for {
         a <- param[String].defaultValue("x")
-        b <- param[String].defaultValue("y").paramLabel("PARAM1")
-        c <- param[String].defaultValue("z").paramLabel("PARAM2").description("This is PARAM2.")
+        b <- param[String].defaultValue("y").label("PARAM1")
+        c <- param[String].defaultValue("z").label("PARAM2").description("This is PARAM2.")
       } yield IO {
         a + b + c
       }
@@ -152,8 +152,8 @@ class CommandLineParserTest
     val spec =
       for {
         a <- param[String].required
-        b <- param[String].required.paramLabel("PARAM1")
-        c <- param[String].required.paramLabel("PARAM2").description("This is PARAM2")
+        b <- param[String].required.label("PARAM1")
+        c <- param[String].required.label("PARAM2").description("This is PARAM2")
       } yield IO {
         a + b + c
       }
@@ -225,7 +225,7 @@ class CommandLineParserTest
       for {
         c <- opt[String]("--c")
         s1 <- subcommand("s1")(subcommand1)
-        s2 <- subcommand("s2").aliases("s3")(subcommand2)
+        s2 <- subcommand("s2", "s3")(subcommand2)
       } yield
         if (c eqv Some("illegal"))
           IO.raiseError(IncorrectCommandLineUsage("c cannot be illegal"))
@@ -285,8 +285,8 @@ Commands:
   "parsing opt with standard extensions test" should behave like {
     val spec =
       for {
-        a <- opt[String]("--a").paramLabel("<a>")
-        b <- opt[Int]("--b").defaultValue(1).paramLabel("<b>")
+        a <- opt[String]("--a").label("<a>")
+        b <- opt[Int]("--b").defaultValue(1).label("<b>")
       } yield IO {
         (a, b)
       }
@@ -303,7 +303,7 @@ Commands:
   "parsing required opt test" should behave like {
     val spec =
       for {
-        a <- opt[String]("--a").required.paramLabel("<a>")
+        a <- opt[String]("--a").required.label("<a>")
       } yield IO {
         a
       }
@@ -399,7 +399,7 @@ This is the main command.
       command.header("Main command with no args").description("This is the main command.") {
         for {
           a <- opt[Int]("--a").defaultValue(1)
-          b <- param[String].paramLabel("xxxx")
+          b <- param[String].label("xxxx")
           args <- args
         } yield IO {
           (a, b, args)
@@ -474,7 +474,7 @@ This is the main command.
         .help(false).commandLine {
         for {
           a <- opt[Int]("-a").defaultValue(1)
-          b <- param[String].paramLabel("xxxx")
+          b <- param[String].label("xxxx")
           args <- args
         } yield IO {
           (a, b, args)
@@ -494,7 +494,7 @@ This is the main command.
         .version("1.0").commandLine {
         for {
           a <- opt[Int]("-a").defaultValue(1)
-          b <- param[String].paramLabel("xxxx")
+          b <- param[String].label("xxxx")
           args <- args
         } yield IO {
           (a, b, args)
@@ -557,7 +557,7 @@ This is the main command.
     val spec =
       command.prefixLongOptionsWith(None).prefixShortOptionsWith(None) {
         for {
-          a <- opt[String]("a").alias("long")
+          a <- opt[String]("a", "long")
         } yield IO {
           a
         }

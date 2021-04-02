@@ -24,7 +24,7 @@ object PingExample extends CommandLineApp {
       count <- opt[Int]("count").defaultValue(10).description("Number of packets")
       timeout <- opt[Duration]("timeout").defaultValue(5.seconds).description("The timeout")
       timeToLive <- opt[Int]("ttl").description("Time to live")
-      host <- param[String].paramLabel("<hostname>")
+      host <- param[String].label("<hostname>")
         .description("The host").required
     } yield IO {
       myPing(host, count, timeout, timeToLive)

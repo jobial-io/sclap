@@ -46,8 +46,8 @@ trait CommandLineParserDsl {
    *
    * @return
    */
-  def subcommand[T](name: String) =
-    Subcommand[T](name)
+  def subcommand[T](name: String, aliases: String*) =
+    Subcommand[T](name).aliases(aliases: _*)
 
   /**
    * Takes a non-empty list of subcommands and returns the IO result of the first one that returns a non-error result
@@ -188,7 +188,7 @@ abstract class OptSpec[A, P: ArgumentValueParser] extends CommandLineArgSpecAWit
 
   def name: String
 
-  def paramLabel: Option[String]
+  def label: Option[String]
 
   def description: Option[String]
 
@@ -197,13 +197,13 @@ abstract class OptSpec[A, P: ArgumentValueParser] extends CommandLineArgSpecAWit
 
 case class Opt[T: ArgumentValueParser](
   name: String,
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   aliases: Seq[String] = Seq()
 ) extends OptSpec[Option[T], T]() {
 
-  def paramLabel(value: String): Opt[T] =
-    copy(paramLabel = Some(value))
+  def label(value: String): Opt[T] =
+    copy(label = Some(value))
 
   def description(value: String): Opt[T] =
     copy(description = Some(value))
@@ -215,16 +215,19 @@ case class Opt[T: ArgumentValueParser](
     copy(aliases = values)
 
   def defaultValue(value: T)(implicit printer: ArgumentValuePrinter[T]) =
-    OptWithDefaultValue[T](name, value, paramLabel, description)
+    OptWithDefaultValue[T](name, value, label, description)
+
+  def default(value: T)(implicit printer: ArgumentValuePrinter[T]) =
+    defaultValue(value)
 
   def required =
-    OptWithRequiredValue(name, paramLabel, description)
+    OptWithRequiredValue(name, label, description)
 }
 
 case class OptWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   name: String,
   defaultValue: T,
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   aliases: Seq[String] = Seq()
 ) extends OptSpec[T, T] {
@@ -232,8 +235,11 @@ case class OptWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   def defaultValue(value: T): OptWithDefaultValue[T] =
     copy(defaultValue = value)
 
-  def paramLabel(value: String): OptWithDefaultValue[T] =
-    copy(paramLabel = Some(value))
+  def default(value: T) =
+    defaultValue(value)
+
+  def label(value: String): OptWithDefaultValue[T] =
+    copy(label = Some(value))
 
   def description(value: String): OptWithDefaultValue[T] =
     copy(description = Some(value))
@@ -249,16 +255,19 @@ case class OptWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
 
 case class OptWithRequiredValue[T: ArgumentValueParser](
   name: String,
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   aliases: Seq[String] = Seq()
 ) extends OptSpec[T, T] {
 
   def defaultValue(value: T)(implicit printer: ArgumentValuePrinter[T]) =
-    OptWithDefaultValue[T](name, value, paramLabel, description)
+    OptWithDefaultValue[T](name, value, label, description)
 
-  def paramLabel(value: String): OptWithRequiredValue[T] =
-    copy(paramLabel = Some(value))
+  def default(value: T)(implicit printer: ArgumentValuePrinter[T]) =
+    defaultValue(value)
+
+  def label(value: String): OptWithRequiredValue[T] =
+    copy(label = Some(value))
 
   def description(value: String): OptWithRequiredValue[T] =
     copy(description = Some(value))
@@ -272,7 +281,7 @@ case class OptWithRequiredValue[T: ArgumentValueParser](
 
 abstract class ParamSpec[A, T: ArgumentValueParser] extends CommandLineArgSpecAWithValueParser[A, T] {
 
-  def paramLabel: Option[String]
+  def label: Option[String]
 
   def description: Option[String]
 }
@@ -290,7 +299,7 @@ abstract class MultiParamSpec[A, T: ArgumentValueParser] extends ParamSpec[A, T]
 }
 
 case class Param[T: ArgumentValueParser](
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   index: Option[Int] = None
 ) extends SingleParamSpec[Option[T], T] {
@@ -301,19 +310,22 @@ case class Param[T: ArgumentValueParser](
   def description(value: String): Param[T] =
     copy(description = Some(value))
 
-  def paramLabel(value: String): Param[T] =
-    copy(paramLabel = Some(value))
+  def label(value: String): Param[T] =
+    copy(label = Some(value))
 
   def required =
-    ParamWithRequiredValue(paramLabel, description, index)
+    ParamWithRequiredValue(label, description, index)
 
   def defaultValue(value: T)(implicit printer: ArgumentValuePrinter[T]) =
-    ParamWithDefaultValue[T](value, paramLabel, description, index)
+    ParamWithDefaultValue[T](value, label, description, index)
+
+  def default(value: T)(implicit printer: ArgumentValuePrinter[T]) =
+    defaultValue(value)
 }
 
 case class ParamWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   defaultValue: T,
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   index: Option[Int] = None
 ) extends SingleParamSpec[T, T] {
@@ -324,14 +336,14 @@ case class ParamWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
   def description(value: String): ParamWithDefaultValue[T] =
     copy(description = Some(value))
 
-  def paramLabel(value: String): ParamWithDefaultValue[T] =
-    copy(paramLabel = Some(value))
+  def label(value: String): ParamWithDefaultValue[T] =
+    copy(label = Some(value))
 
   val defaultValuePrinter = ArgumentValuePrinter[T]
 }
 
 case class ParamWithRequiredValue[T: ArgumentValueParser](
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   index: Option[Int] = None
 ) extends SingleParamSpec[T, T] {
@@ -342,12 +354,12 @@ case class ParamWithRequiredValue[T: ArgumentValueParser](
   def description(value: String): ParamWithRequiredValue[T] =
     copy(description = Some(value))
 
-  def paramLabel(value: String): ParamWithRequiredValue[T] =
-    copy(paramLabel = Some(value))
+  def label(value: String): ParamWithRequiredValue[T] =
+    copy(label = Some(value))
 }
 
 case class ParamRange[T: ArgumentValueParser](
-  paramLabel: Option[String] = None,
+  label: Option[String] = None,
   description: Option[String] = None,
   required: Boolean,
   fromIndex: Option[Int] = None,
@@ -367,7 +379,7 @@ case class Subcommand[A](
   name: String,
   header: Option[String] = None,
   description: Option[String] = None,
-  aliases: Option[Seq[String]] = None
+  aliases: Seq[String] = Seq()
 ) {
 
   def name(value: String): Subcommand[A] =
@@ -380,7 +392,7 @@ case class Subcommand[A](
     copy(description = Some(value))
 
   def aliases(values: String*): Subcommand[A] =
-    copy(aliases = Some(values))
+    copy(aliases = values)
 
   def commandLine(commandLine: CommandLine[A]) =
     SubcommandWithCommandLine[A](this.asInstanceOf[Subcommand[A]], commandLine)

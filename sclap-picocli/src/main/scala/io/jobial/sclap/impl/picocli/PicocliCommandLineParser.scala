@@ -124,7 +124,7 @@ trait PicocliCommandLineParser {
       def optionSpecBuilderForOpt[T: ArgumentValueParser](opt: OptSpec[_, T]) = {
         val specBuilder = optionSpecBuilder(opt.name +: opt.aliases)
           .`type`(ArgumentValueParser[T].resultClass).converters(typeConverterFor[T])
-        opt.paramLabel.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
+        opt.label.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
         opt.description.map(l => specBuilder.description(l)).getOrElse(specBuilder)
       }
 
@@ -211,7 +211,7 @@ trait PicocliCommandLineParser {
         val specBuilder = PositionalParamSpec.builder
           .`type`(ArgumentValueParser[T].resultClass).converters(typeConverterFor[T])
           .descriptionKey(param.toString).required(false)
-        param.paramLabel.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
+        param.label.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
         param.description.map(l => specBuilder.description(l)).getOrElse(specBuilder)
       }
 
@@ -271,7 +271,7 @@ trait PicocliCommandLineParser {
           State.modify[CommandLineParsingContext] { ctx =>
             val r = parseCommandLine(CommandWithCommandLine(ctx.command.copy(name = None), subcommandLine).build, args, CommandLineParsingContext(subcommand = true)).picocliCommandSpec
             val picocliSubcommandLine = new PicocliCommandLine(r)
-            subcommand.aliases.map(aliases => picocliSubcommandLine.getCommandSpec.aliases(aliases: _*))
+            if (!subcommand.aliases.isEmpty) picocliSubcommandLine.getCommandSpec.aliases(subcommand.aliases: _*)
             ctx.updateSpec(_.addSubcommand(subcommand.name, picocliSubcommandLine))
           }.inspect(_ => IO())
         case NoSpec(result) =>
