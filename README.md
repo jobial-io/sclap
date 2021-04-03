@@ -259,14 +259,14 @@ object ArithmeticExample extends CommandLineApp {
 
   def add =
     for {
-      a <- opt[Int]("a").required
-      b <- opt[Int]("b").required
+      a <- param[Int].required
+      b <- param[Int].required
     } yield IO(a + b)
 
   def sub =
     for {
-      a <- opt[Int]("a").required
-      b <- opt[Int]("b").required
+      a <- param[Int].required
+      b <- param[Int].required
     } yield IO(a - b)
 
   def run =
@@ -294,17 +294,17 @@ and
 ```
 > ArithmeticExample add --help
 
-Usage: ArithmeticExample add -a=PARAM -b=PARAM
--a=PARAM
--b=PARAM
+Usage: ArithmeticExample add PARAM PARAM
+  PARAM
+  PARAM
 ```
 
 so we can
 
 ```
-> ArithmeticExample add -a=3 -b=2
+> ArithmeticExample add 3 2
 5
-> ArithmeticExample sub -a=3 -b=2
+> ArithmeticExample sub 3 2
 1
 
 ```
@@ -312,6 +312,83 @@ so we can
 The structure of a subcommand is the same as of a main command. Commands can be arbitrarily combined into a hierarchy of
 subcommands using the `subcommand(...)` function. Since everything is referentially transparent here, subcommand and
 command definitions can be reused and combined arbitrarily, without any side-effect.
+
+This can be demonstrated by improving on the arithmetic example the following way. Let's say we want to implement
+division and multiplication in addition to the previous operations. Since all these require two operands and only differ
+in the operator, it would be redundant to implement them as separate functions. Instead, the code for the subcommands
+can be shared the following way, for example:
+
+```scala
+
+def operation[T: ArgumentValueParser](name: String, op: (T, T) => T) =
+  subcommand[T](name) {
+    for {
+      a <- param[T].required
+      b <- param[T].required
+    } yield IO(op(a, b))
+  }
+
+def run =
+  for {
+    subcommandResult <- subcommands(
+      operation[Double]("add", _ + _),
+      operation[Double]("sub", _ - _),
+      operation[Double]("mul", _ * _),
+      operation[Double]("div", _ / _)
+    )
+  } yield subcommandResult.map(println)
+
+```
+
+As can be seen from this example, the code for the subcommands has been completely generified and reused: both the
+operand type and the operators are parameters here. Since the type is a parameter now, we need to make sure there is
+an `ArgumentValueParser` instance available for it to be able to use it in `param[...]`. Another thing to note is that
+Sclap provides a useful alternative to `orElse` when it comes to combining the results of the subcommands.
+The `subcommands(...)` function takes a variable number of subcommand definitions as arguments, and returns the result
+of the one selected by the caller (just like as if `orElse` was used between the individual subcommand results). This is
+useful because the selection of the subcommand result can be moved to the main for comprehension, without introducing
+another one in the yield section (see previous example).
+
+We can now:
+
+```
+> ArithmeticExample mul 3 2
+6
+> ArithmeticExample div 3 2
+1.5
+
+```
+
+To further improve our arithmetic app, we can add headers and some description to the main command and the subcommands
+like this:
+
+```scala
+
+def operation[T: ArgumentValueParser](name: String, op: (T, T) => T) =
+  subcommand[T](name)
+    .header(s"${name.toUpperCase} two numbers.")
+    .description("Speficy the two operands and the result will be printed.") {
+      for {
+        a <- param[T].description("The first operand.").required
+        b <- param[T].description("The second operand.").required
+      } yield IO(op(a, b))
+    }
+
+def run =
+  command("arithmetic")
+    .header("Simple arithmetics on the command line.")
+    .description("Use the following commands to add, subtract, multiply, divide numbers.") {
+      for {
+        subcommandResult <- subcommands(
+          operation[Double]("add", _ + _),
+          operation[Double]("sub", _ - _),
+          operation[Double]("mul", _ * _),
+          operation[Double]("div", _ / _)
+        )
+      } yield subcommandResult.map(println)
+    }
+
+```
 
 ## Error handling
 
@@ -558,7 +635,8 @@ Sclap comes with the `CommandLineAppTestHelper` trait to help you write tests ag
 
 ## List of examples
 
-You can find more examples [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
+You can find more
+examples [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/src/main/scala/io/jobial/sclap/example).
 
 ## How does it work?
 
