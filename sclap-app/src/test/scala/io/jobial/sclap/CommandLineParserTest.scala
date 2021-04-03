@@ -376,6 +376,46 @@ This is a subcommand.
     )
   }
 
+  "parsing command and subcommand properties test where header is specified on the subcommand" should behave like {
+    val sub =
+      subcommand("s").header("A subcommand").description("This is a subcommand.") {
+        for {
+          a <- opt[String]("--a")
+        } yield IO {
+          a
+        }
+      }
+
+    val main =
+      command.header("Main command with a subcommand").description("This is the main command.") {
+        for {
+          b <- opt[String]("--b")
+          s <- sub
+        } yield for {
+          r <- s
+        } yield (b, r)
+      }
+
+    runCommandLineTestCases(main)(
+      TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s")),
+      TestCase(Seq("--c", "hello"), failCommandLineParsingWith("Unknown options: '--c', 'hello'")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with a subcommand
+Usage: CommandLineParserTest [-h] [--b=PARAM] [COMMAND]
+This is the main command.
+      --b=PARAM
+  -h, --help      Show this help message and exit.
+Commands:
+  s  A subcommand
+""")),
+      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand
+Usage: CommandLineParserTest s [-h] [--a=PARAM]
+This is a subcommand.
+      --a=PARAM
+  -h, --help      Show this help message and exit.
+"""))
+    )
+  }
+
   "parsing a command with no command line options test" should behave like {
     val main =
       command.header("Main command with no args").description("This is the main command.") {

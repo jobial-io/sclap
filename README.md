@@ -366,7 +366,7 @@ like this:
 
 def operation[T: ArgumentValueParser](name: String, op: (T, T) => T) =
   subcommand[T](name)
-    .header(s"${name.toUpperCase} two numbers.")
+    .header(s"${name.capitalize} two numbers.")
     .description("Speficy the two operands and the result will be printed.") {
       for {
         a <- param[T].description("The first operand.").required
