@@ -340,8 +340,8 @@ def run =
 
 ```
 
-As can be seen from this example, the code for the subcommands has been completely generified and reused: both the
-operand type and the operators are parameters here. Since the type is a parameter now, we need to make sure there is
+As can be seen from this example, the code for the subcommands has been completely generified: both the operand type and
+the operators are parameters here. Since the type is a parameter now, we need to make sure there is
 an `ArgumentValueParser` instance available for it to be able to use it in `param[...]`. Another thing to note is that
 Sclap provides a useful alternative to `orElse` when it comes to combining the results of the subcommands.
 The `subcommands(...)` function takes a variable number of subcommand definitions as arguments, and returns the result
@@ -359,8 +359,8 @@ We can now:
 
 ```
 
-To further improve our arithmetic app, we can add headers and some description to the main command and the subcommands
-like this:
+To further improve our arithmetic app, we can add headers and description to the main command and the subcommands like
+this:
 
 ```scala
 
