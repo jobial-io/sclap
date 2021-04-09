@@ -43,7 +43,7 @@ class CommandLineParserTest
   "parsing opt with default value test" should behave like {
     val spec =
       for {
-        a <- opt[String]("--a").defaultValue("hello")
+        a <- opt[String]("--a").default("hello")
       } yield IO {
         a
       }
@@ -59,8 +59,8 @@ class CommandLineParserTest
   "parsing opt with description test" should behave like {
     val spec =
       for {
-        a <- opt[String]("a").defaultValue("hello").description("This is option a.")
-        b <- opt[String]("b").defaultValue("hello").description("This is option b")
+        a <- opt[String]("a").default("hello").description("This is option a.")
+        b <- opt[String]("b").default("hello").description("This is option b")
         c <- opt[String]("c").description("This is option c.")
         d <- opt[String]("d").description("This is option d")
       } yield IO {
@@ -88,7 +88,7 @@ class CommandLineParserTest
     val spec =
       for {
         a <- opt[String]("--a")
-        b <- opt[String]("--b").defaultValue("hello")
+        b <- opt[String]("--b").default("hello")
       } yield IO {
         (a, b)
       }
@@ -129,9 +129,9 @@ class CommandLineParserTest
   "parsing param with default value test" should behave like {
     val spec =
       for {
-        a <- param[String].defaultValue("x")
-        b <- param[String].defaultValue("y").label("PARAM1")
-        c <- param[String].defaultValue("z").label("PARAM2").description("This is PARAM2.")
+        a <- param[String].default("x")
+        b <- param[String].default("y").label("PARAM1")
+        c <- param[String].default("z").label("PARAM2").description("This is PARAM2.")
       } yield IO {
         a + b + c
       }
@@ -212,7 +212,7 @@ class CommandLineParserTest
           IO(a)
 
     val subcommand2 = for {
-      b <- opt[Int]("-b").defaultValue(1)
+      b <- opt[Int]("-b").default(1)
     } yield
       if (b eqv 0)
         IO.raiseError(new IllegalArgumentException("s2 failed"))
@@ -286,7 +286,7 @@ Commands:
     val spec =
       for {
         a <- opt[String]("--a").label("<a>")
-        b <- opt[Int]("--b").defaultValue(1).label("<b>")
+        b <- opt[Int]("--b").default(1).label("<b>")
       } yield IO {
         (a, b)
       }
@@ -321,8 +321,8 @@ Commands:
     val spec =
       for {
         a <- opt[String]("--a").withPicocliOptionSpecBuilder(_.defaultValue("hello").paramLabel("<a>"))
-        b <- opt[Int]("--b").defaultValue(1).withPicocliOptionSpecBuilder(_.paramLabel("<b>"))
-        //      p <- param[String]("p").withPicocliOptionSpecBuilder(_.defaultValue("hello"))
+        b <- opt[Int]("--b").default(1).withPicocliOptionSpecBuilder(_.paramLabel("<b>"))
+        //      p <- param[String]("p").withPicocliOptionSpecBuilder(_.default("hello"))
       } yield IO {
         (a, b)
       }
@@ -438,7 +438,7 @@ This is the main command.
     val main =
       command.header("Main command with no args").description("This is the main command.") {
         for {
-          a <- opt[Int]("--a").defaultValue(1)
+          a <- opt[Int]("--a").default(1)
           b <- param[String].label("xxxx")
           args <- args
         } yield IO {
@@ -455,15 +455,15 @@ This is the main command.
   "opts of built-in types" should behave like {
     val spec =
       for {
-        s <- opt[String]("s").defaultValue("")
-        b <- opt[Boolean]("b").defaultValue(true)
-        i <- opt[Int]("i").defaultValue(1)
-        l <- opt[Long]("l").defaultValue(2)
-        f <- opt[Float]("f").defaultValue(1.0f)
-        d <- opt[Double]("d").defaultValue(1.0)
-        g <- opt[Duration]("g").defaultValue(1.second)
-        h <- opt[FiniteDuration]("k").defaultValue(2.seconds)
-        j <- opt[BigDecimal]("j").defaultValue(BigDecimal(1.0))
+        s <- opt[String]("s").default("")
+        b <- opt[Boolean]("b").default(true)
+        i <- opt[Int]("i").default(1)
+        l <- opt[Long]("l").default(2)
+        f <- opt[Float]("f").default(1.0f)
+        d <- opt[Double]("d").default(1.0)
+        g <- opt[Duration]("g").default(1.second)
+        h <- opt[FiniteDuration]("k").default(2.seconds)
+        j <- opt[BigDecimal]("j").default(BigDecimal(1.0))
       } yield IO {
         (s, b, i, l, f, d, g, h, j)
       }
@@ -490,15 +490,15 @@ This is the main command.
   "params of built-in types" should behave like {
     val spec =
       for {
-        s <- param[String].defaultValue("")
-        b <- param[Boolean].defaultValue(true)
-        i <- param[Int].defaultValue(1)
-        l <- param[Long].defaultValue(2)
-        f <- param[Float].defaultValue(3.0f)
-        d <- param[Double].defaultValue(4.0)
-        g <- param[Duration].defaultValue(1.second)
-        h <- param[FiniteDuration].defaultValue(2.seconds)
-        j <- param[BigDecimal].defaultValue(BigDecimal(1.0))
+        s <- param[String].default("")
+        b <- param[Boolean].default(true)
+        i <- param[Int].default(1)
+        l <- param[Long].default(2)
+        f <- param[Float].default(3.0f)
+        d <- param[Double].default(4.0)
+        g <- param[Duration].default(1.second)
+        h <- param[FiniteDuration].default(2.seconds)
+        j <- param[BigDecimal].default(BigDecimal(1.0))
       } yield IO {
         (s, b, i, l, f, d, g, h, j)
       }
@@ -513,7 +513,7 @@ This is the main command.
       command.header("Main command").description("This is the main command.")
         .help(false).commandLine {
         for {
-          a <- opt[Int]("-a").defaultValue(1)
+          a <- opt[Int]("-a").default(1)
           b <- param[String].label("xxxx")
           args <- args
         } yield IO {
@@ -533,7 +533,7 @@ This is the main command.
       command.header("Main command").description("This is the main command.")
         .version("1.0").commandLine {
         for {
-          a <- opt[Int]("-a").defaultValue(1)
+          a <- opt[Int]("-a").default(1)
           b <- param[String].label("xxxx")
           args <- args
         } yield IO {
@@ -668,7 +668,7 @@ This is a subcommand.
 
     val spec =
       for {
-        d <- opt[LocalDate]("date").defaultValue(now).description("The date")
+        d <- opt[LocalDate]("date").default(now).description("The date")
       } yield IO {
         println(s"date: $d")
       }
@@ -684,5 +684,5 @@ This is a subcommand.
     )
   }
 
-  // TODO: add test for Try, Either, Any
+  // TODO: add test for Try and Either
 }

@@ -709,8 +709,8 @@ like running actual application logic, for example).
 ### Implicits
 
 Sclap relies on a few carefully designed implicits to make the syntax more concise. If you want to override the defaults
-or have an aversion to implicits, you can always choose to not include the built-in ones in your code by extending the
-`CommandLineAppNoImplicits` trait instead and cherry-pick the implicits you need separately. If you decide not to use
+or have an aversion to implicits, you can always choose to not include the built-in implicits in your code by extending the
+`CommandLineAppNoImplicits` trait instead and cherry-pick the ones you need separately. If you decide not to use
 any of the implicits provided by the library, the syntax becomes slightly more verbose but still manageable. Here is an
 example:
 
