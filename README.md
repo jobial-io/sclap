@@ -77,7 +77,7 @@ you can execute it on the command line as `PingExample`.
 
 A few things to note here:
 
-* **Type safety**: Sclap correctly infers the type of command line options and parameters. For example, `timeToLive` is
+* **Type safety**: Sclap correctly infers the type of each command line option and parameter. For example, `timeToLive` is
   an `Option[Int]`
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
