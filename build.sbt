@@ -15,7 +15,8 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.5")
-ThisBuild / version := "1.1.1"
+ThisBuild / version := "1.1.2"
+ThisBuild / publishArtifact in (Test, packageBin) := true
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
@@ -41,7 +42,7 @@ lazy val root: Project = project
   .settings(
   )
   .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
-  .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app`)
+  .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app` % "compile->compile;test->test")
 
 lazy val `sclap-core` = project
   .in(file("sclap-core"))
