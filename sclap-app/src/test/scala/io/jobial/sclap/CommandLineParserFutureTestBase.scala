@@ -62,6 +62,24 @@ trait CommandLineParserFutureTestBase
     )
   }
 
+  "command line that returns a block with a future result" should behave like {
+    // Counter to signal side effect
+    val counter = new AtomicInteger
+
+    val spec: CommandLine[Int] =
+      for {
+        a <- opt[String]("a")
+      } yield fromFuture {
+        counter.incrementAndGet
+        
+        futureForCounter(counter)
+      }
+    
+    runCommandLineTestCases(spec)(
+      TestCase(Seq("--hello"), checkSideEffects(counter, 2))
+    )
+  }
+
   "command line with two options that returns a future" should behave like {
     val counter = new AtomicInteger
 
