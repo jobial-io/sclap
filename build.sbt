@@ -15,8 +15,10 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.5")
-ThisBuild / version := "1.1.3"
+ThisBuild / version := "1.1.4"
 ThisBuild / publishArtifact in (Test, packageBin) := true
+ThisBuild / publishArtifact in (Test, packageSrc) := true
+ThisBuild / publishArtifact in (Test, packageDoc) := true
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
