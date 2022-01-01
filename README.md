@@ -112,7 +112,7 @@ A few things to note here:
 
 
 * Sclap will handle errors returned by your application code automatically: if your app throws an exception (or returns
-  an error state in an `IO`, `Future` or `Try`), it will automatically be turned into a non-zero exit code.
+  an error state in an `IO`, `ZIO`, `Future` or `Try`), it will automatically be turned into a non-zero exit code.
   Alternatively, you can return an `IO[ExitCode]` to explicitly specify the exit code (see `cats.effect.ExitCode` in
   Cats Effect).
 
@@ -185,7 +185,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.1.3"
+  "io.jobial" %% "sclap" % "1.1.5"
 )
 ```
 
@@ -196,7 +196,7 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.1.3</version>
+    <version>1.1.5</version>
 </dependency>
 ```
 
