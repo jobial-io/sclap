@@ -15,7 +15,7 @@ name := "sclap"
 
 ThisBuild / organization := "io.jobial"
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.5")
-ThisBuild / version := "1.1.4"
+ThisBuild / version := "1.1.5"
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
 ThisBuild / publishArtifact in (Test, packageDoc) := true
@@ -30,20 +30,22 @@ lazy val commonSettings = Seq(
   sonatypeProjectHosting := Some(GitHubHosting("jobial-io", "sclap", "orbang@jobial.io")),
   organizationName := "Jobial OÜ",
   licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
-  description := "Scala command line apps made simple - a composable and easy-to-use CLI parser built on Cats"
+  description := "Scala command line apps made simple - a composable and easy-to-use CLI parser built on Cats",
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
 )
 
 lazy val CatsVersion = "2.0.0"
 lazy val ScalaLoggingVersion = "3.9.2"
 lazy val PicocliVersion = "4.6.1"
 lazy val ScalatestVersion = "3.2.3"
+lazy val ZioVersion = "2.0.0.0-RC13" // TODO: upgrade when Cats version is upgraded
 
 lazy val root: Project = project
   .in(file("."))
   .settings(commonSettings)
   .settings(
   )
-  .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`)
+  .aggregate(`sclap-core`, `sclap-picocli`, `sclap-app`, `sclap-examples`, `sclap-zio`)
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app` % "compile->compile;test->test")
 
 lazy val `sclap-core` = project
@@ -81,4 +83,14 @@ lazy val `sclap-app` = project
 lazy val `sclap-examples` = project
   .in(file("sclap-examples"))
   .settings(commonSettings)
+  .dependsOn(`sclap-app`, `sclap-zio`)
+
+lazy val `sclap-zio` = project
+  .in(file("sclap-zio"))
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio-interop-cats" % ZioVersion
+    )
+  )
   .dependsOn(`sclap-app`)

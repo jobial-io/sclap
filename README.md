@@ -466,6 +466,32 @@ Usage: ErrorExample [-h] [--hello=PARAM]
       --hello=PARAM
 ```
 
+### Using with ZIO
+
+Sclap can be used seamlessly with ZIO through ZIO's cats-interop. Sclap also provides the more convenient
+`ZIOCommandLineApp` base trait through:
+
+```scala
+libraryDependencies ++= Seq(
+  "io.jobial" %% "sclap-zio" % "1.1.5"
+)
+```
+
+and then
+
+```scala
+import io.jobial.sclap.zio.ZIOCommandLineApp
+import zio.console._
+
+object ZIOExample extends ZIOCommandLineApp {
+
+  def run =
+    for {
+      hello <- opt[String]("hello")
+    } yield putStr(s"Hello $hello")
+}
+```
+
 ### What if I want to use Future?
 
 You can return a Future seamlessly in the yield part of the run function:
