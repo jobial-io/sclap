@@ -1,4 +1,6 @@
-# Sclap: Scala Command Line Apps Made Simple
+# Sclap: Scala Command Line Apps
+
+A simple and effective way to create high-quality, feature-rich Scala command line apps.
 
 An example speaks more than a thousand words:
 
@@ -72,7 +74,7 @@ Finally, if you specify some options, you will see something like:
 Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
 ```
 
-Of course, these examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
+These examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
 you can execute it on the command line as `PingExample`.
 
 A few things to note here:
@@ -722,6 +724,7 @@ Sclap is modular and comes with the following artifacts:
 * **sclap-picocli:** the default Sclap parser implementation built on Picocli, which is a mature command line parsing
   library with a traditional, non-safe Java API. Fortunately it comes with no dependencies apart from the Java standard
   library and exposes a fairly reusable API.
+* **sclap-zio:** ZIO support.
 * **sclap-examples:** Example apps.
 
 Sclap relies on the Free monad class from cats-free to implement the DSL that describes the command line interface. The
