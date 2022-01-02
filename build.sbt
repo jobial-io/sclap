@@ -14,8 +14,8 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.5")
-ThisBuild / version := "1.1.5"
+ThisBuild / crossScalaVersions := Seq("2.12.13", "2.13.5")
+ThisBuild / version := "1.2.0"
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
 ThisBuild / publishArtifact in (Test, packageDoc) := true
@@ -34,11 +34,12 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
 )
 
-lazy val CatsVersion = "2.0.0"
+lazy val CatsVersion = "2.7.0"
+lazy val CatsEffectVersion = "2.5.4"
 lazy val ScalaLoggingVersion = "3.9.2"
 lazy val PicocliVersion = "4.6.1"
 lazy val ScalatestVersion = "3.2.3"
-lazy val ZioVersion = "2.0.0.0-RC13" // TODO: upgrade when Cats version is upgraded
+lazy val ZioVersion = "2.5.1.0" // TODO: upgrade when Cats version is upgraded
 
 lazy val root: Project = project
   .in(file("."))
@@ -54,8 +55,8 @@ lazy val `sclap-core` = project
   .settings(
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-effect" % CatsVersion,
       "org.typelevel" %% "cats-free" % CatsVersion,
+      "org.typelevel" %% "cats-effect" % CatsEffectVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion
     )
   )
