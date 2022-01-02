@@ -187,7 +187,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.2.0"
+  "io.jobial" %% "sclap" % "1.2.1"
 )
 ```
 
@@ -198,11 +198,11 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
-to `pom.xml` if you use Maven, where scala.version is either 2.11, 2.12, 2.13 and 3.0 coming soon...
+to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 and 3.0 coming soon (for Scala 2.11, use version 1.1.5).
 
 ### ...and a more detailed one
 
@@ -475,7 +475,7 @@ Sclap can be used seamlessly with ZIO through ZIO's cats-interop. Sclap also pro
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap-zio" % "1.2.0"
+  "io.jobial" %% "sclap-zio" % "1.2.1"
 )
 ```
 
