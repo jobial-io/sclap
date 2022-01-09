@@ -1,6 +1,8 @@
 # Sclap: Scala Command Line Apps
 
-A simple and effective way to create high-quality, feature-rich Scala command line apps.
+[![sclap](doc/header.png)](https://www.urbandictionary.com/define.php?term=sclap)
+
+A simple and effective way to create feature-rich and type-safe Scala command line apps.
 
 An example speaks more than a thousand words:
 
@@ -609,8 +611,8 @@ object DateExample extends CommandLineApp {
 }
 ```
 
-Instead of defining the printer directly, it can be derived from a `Show` intance. So the following would also work to
-print the default argument value:
+Instead of defining the printer directly, it can be derived from a `Show` intance. So the following would also work as a way to
+derive the argument value printer for LocalDate, for example:
 
 ```scala
   implicit val localDateShow = Show.fromToString[LocalDate]
@@ -671,8 +673,8 @@ examples [here](https://github.com/jobial-io/sclap/tree/master/sclap-examples/sr
 ### Anatomy
 
 A few pointers on the structure of the command line description in Sclap. An application typically implements
-the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats Effect's `IOApp`
-. The app has to implement the
+the `CommandLineApp` trait, which provides a safe implementation of the `main` function relying on Cats Effect's `IOApp`.
+The app has to implement the
 
 ```scala
 def run: CommandLine[Any]
@@ -702,7 +704,7 @@ def run =
   }
 ```
 
-which is just a monadic expression using the `CommandLineArgSpec` Free monad mentioned above. The for part of the
+which is just a monadic expression using the `CommandLineArgSpec` Free monad from above. The for part of the
 comprehension binds the option and parameter values to names, and the yield section returns the application logic. As
 mentioned before, the return type of the yield part is always `IO[_]`. This is important: `IO` is pure and allows the
 library to process the description safely, without any side-effects. To make it more convenient for applications that do
