@@ -44,6 +44,7 @@ class CommandLineParserTest
     val spec =
       for {
         a <- opt[String]("--a").default("hello")
+        c <- opt[String]("c", "C").default("world")
       } yield IO {
         a
       }
@@ -52,7 +53,12 @@ class CommandLineParserTest
       TestCase(Seq(), succeedWith("hello")),
       TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)")),
       TestCase(Seq("--a", "hi"), succeedWith("hi")),
-      TestCase(Seq("--b"), failCommandLineParsingWith("Unknown option: '--b'"))
+      TestCase(Seq("--b"), failCommandLineParsingWith("Unknown option: '--b'")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--a=PARAM] [-c=PARAM]
+      --a=PARAM   (default: hello).
+  -c, -C=PARAM    (default: world).
+  -h, --help      Show this help message and exit.
+"""))
     )
   }
 
@@ -304,16 +310,22 @@ Commands:
     val spec =
       for {
         a <- opt[String]("--a").required.label("<a>")
+        b <- opt[String]("b", "B").required.label("<b>")
       } yield IO {
         a
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), failCommandLineParsingWith("Missing required option: '--a=<a>'")),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)")),
-      TestCase(Seq("--a", "hi"), succeedWith("hi")),
-      TestCase(Seq("--c"), failCommandLineParsingWith("Missing required option: '--a=<a>'")),
-      TestCase(Seq("--a", "x", "--c"), failCommandLineParsingWith("Unknown option: '--c'"))
+      TestCase(Seq(), failCommandLineParsingWith("Missing required options: '--a=<a>', '-b=<b>'")),
+      TestCase(Seq("-b", "x", "--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)")),
+      TestCase(Seq("-b", "x", "--a", "hi"), succeedWith("hi")),
+      TestCase(Seq("-b", "x", "--c"), failCommandLineParsingWith("Missing required option: '--a=<a>'")),
+      TestCase(Seq("-b", "x", "--a", "x", "--c"), failCommandLineParsingWith("Unknown option: '--c'")),
+      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] --a=<a> -b=<b>
+      --a=<a>
+  -b, -B=<b>
+  -h, --help    Show this help message and exit.
+"""))
     )
   }
 
