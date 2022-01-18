@@ -43,7 +43,7 @@ Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostnam
 
 On a colour terminal you should get something like:
 
-![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/sclap-examples/pingExampleScreenshot.png)
+![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/doc/pingExampleScreenshot.png)
 
 If you run it without any arguments, you will get the following on the standard error along with a non-zero exit code,
 as expected:
