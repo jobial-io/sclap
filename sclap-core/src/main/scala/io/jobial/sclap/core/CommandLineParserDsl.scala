@@ -215,13 +215,13 @@ case class Opt[T: ArgumentValueParser](
     copy(aliases = values)
 
   def defaultValue(value: T)(implicit printer: ArgumentValuePrinter[T]) =
-    OptWithDefaultValue[T](name, value, label, description)
+    OptWithDefaultValue[T](name, value, label, description, aliases)
 
   def default(value: T)(implicit printer: ArgumentValuePrinter[T]) =
     defaultValue(value)
 
   def required =
-    OptWithRequiredValue(name, label, description)
+    OptWithRequiredValue(name, label, description, aliases)
 }
 
 case class OptWithDefaultValue[T: ArgumentValueParser : ArgumentValuePrinter](
