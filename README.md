@@ -204,7 +204,7 @@ to your `build.sbt` or
 </dependency>
 ```
 
-to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 and 3.0 coming soon (for Scala 2.11, use version 1.1.5).
+to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 and 3.0 coming soon (for Scala 2.11, use version 1.1.6).
 
 ### ...and a more detailed one
 
