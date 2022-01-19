@@ -15,16 +15,11 @@ object PingExample extends CommandLineApp {
 
   def run =
     for {
-      count <- opt[Int]("count").default(10).description("Number of packets")
-      timeout <- opt[Duration]("timeout").default(5.seconds).description("The timeout")
-      timeToLive <- opt[Int]("ttl").description("Time to live")
       host <- param[String].label("<hostname>").description("The host").required
+      count <- opt[Int]("count").description("Number of packets")
+      timeout <- opt[Duration]("timeout").default(5.seconds).description("The timeout")
     } yield
-      myPing(host, count, timeout, timeToLive)
-
-  def myPing(host: String, count: Int, timeout: Duration, timeToLive: Option[Int]) =
-    IO(println(s"Pinging $host with $count packets, $timeout timeout and $timeToLive ttl..."))
-
+      IO(println(s"Pinging $host with count: $count, timeout: $timeout..."))
 }
 ```
 
@@ -33,12 +28,11 @@ which produces the following command line usage message when run with --help:
 ```text
 > PingExample --help
 
-Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostname>
+Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] <hostname>
       <hostname>        The hostname.
-      --count=PARAM     Number of packets (default: 10).
+      --count=PARAM     Number of packets.
   -h, --help            Show this help message and exit.
       --timeout=PARAM   The timeout (default: 5 seconds).
-      --ttl=PARAM       Time to live.
 ```
 
 On a colour terminal you should get something like:
@@ -52,12 +46,11 @@ as expected:
 > PingExample
 
 Missing required parameter: '<hostname>'
-Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] [--ttl=PARAM] <hostname>
+Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] <hostname>
       <hostname>        The hostname.
-      --count=PARAM     Number of packets (default: 10).
+      --count=PARAM     Number of packets.
   -h, --help            Show this help message and exit.
       --timeout=PARAM   The timeout (default: 5 seconds).
-      --ttl=PARAM       Time to live.
 ```
 
 If you run it with the argument "localhost", you should get:
@@ -65,15 +58,15 @@ If you run it with the argument "localhost", you should get:
 ```text
 > PingExample localhost
 
-Pinging localhost with 10 packets, timeout: 5 seconds, ttl: None...
+Pinging localhost with count: None, timeout: 5 seconds...
 ```
 
 Finally, if you specify some options, you will see something like:
 
 ```text
-> PingExample --count=2 --ttl=100 localhost
+> PingExample --count=2 localhost
 
-Pinging localhost with 2 packets, timeout: 5 seconds, ttl: Some(100)...
+Pinging localhost with count: Some(2), timeout: 5 seconds...
 ```
 
 These examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
@@ -81,13 +74,13 @@ you can execute it on the command line as `PingExample`.
 
 A few things to note here:
 
-* **Type safety**: Sclap correctly infers the type of each command line option and parameter. For example, `timeToLive` is
+* **Type safety**: Sclap correctly infers the type of each command line option and parameter. For example, `count` is
   an `Option[Int]`
   because it is not required to be specified by the caller. Host, on the other hand, is a `String` (not
   an `Option[String]`)
   because it is required. The same way, timeout is a `Duration` because it has a default value, so it is always
-  available. By being type safe, there is virtually no possibility of ending up with options and parameters being in
-  an "illegal state". You can be sure your opts and params are always valid and available in your application logic,
+  available. By being type safe, there is virtually no possibility of ending up with options and parameters in
+  an invalid state. You can be sure your opts and params are always valid and available in your application logic,
   otherwise Sclap will catch the problem before it reaches your code and handles the error appropriately (for example,
   it returns an error exit code and prints the error and usage messages).
 
