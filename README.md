@@ -23,21 +23,10 @@ object PingExample extends CommandLineApp {
 }
 ```
 
-which produces the following command line usage message when run with --help:
+which produces the following usage message when run with --help on 
+a colour terminal:
 
-```text
-> PingExample --help
-
-Usage: PingExample [-h] [--count=PARAM] [--timeout=PARAM] <hostname>
-      <hostname>        The hostname.
-      --count=PARAM     Number of packets.
-  -h, --help            Show this help message and exit.
-      --timeout=PARAM   The timeout (default: 5 seconds).
-```
-
-On a colour terminal you should get something like:
-
-![alt PingExample](https://raw.githubusercontent.com/jobial-io/sclap/master/doc/pingExampleScreenshot.png)
+![alt PingExample](doc/pingExampleScreenshot.png)
 
 If you run it without any arguments, you will get the following on the standard error along with a non-zero exit code,
 as expected:
