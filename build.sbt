@@ -31,7 +31,8 @@ lazy val commonSettings = Seq(
   organizationName := "Jobial OÜ",
   licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   description := "Scala command line apps made simple - a composable and easy-to-use CLI parser built on Cats",
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
+  scalacOptions += "-Ypartial-unification"
 )
 
 lazy val CatsVersion = "2.7.0"
@@ -50,7 +51,6 @@ lazy val root: Project = project
   .dependsOn(`sclap-core`, `sclap-picocli`, `sclap-app` % "compile->compile;test->test")
 
 lazy val `sclap-core` = project
-  .in(file("sclap-core"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
@@ -62,7 +62,6 @@ lazy val `sclap-core` = project
   )
 
 lazy val `sclap-picocli` = project
-  .in(file("sclap-picocli"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
@@ -72,7 +71,6 @@ lazy val `sclap-picocli` = project
   .dependsOn(`sclap-core`)
 
 lazy val `sclap-app` = project
-  .in(file("sclap-app"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
@@ -82,12 +80,10 @@ lazy val `sclap-app` = project
   .dependsOn(`sclap-picocli`)
 
 lazy val `sclap-examples` = project
-  .in(file("sclap-examples"))
   .settings(commonSettings)
   .dependsOn(`sclap-app`, `sclap-zio`)
 
 lazy val `sclap-zio` = project
-  .in(file("sclap-zio"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
