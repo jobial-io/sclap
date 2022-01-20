@@ -58,6 +58,8 @@ Finally, if you specify some options, you will see something like:
 Pinging localhost with count: Some(2), timeout: 5 seconds...
 ```
 
+[Try me on Scastie](https://scastie.scala-lang.org/79tUfSVERsKKEfjA6bkPyA) with Scala 3.1.
+
 These examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
 you can execute it on the command line as `PingExample`.
 
@@ -109,7 +111,7 @@ line is still king and writing command line tools should be straightforward and 
 
 Although Sclap is built on
 **Cats**, **Cats Effect** and **Cats Free** in a purely functional style and combines best with the Cats ecosystem, you
-don't need to know any of those libraries to use it. Sclap can be used seamlessly in non-Cats based or non-FP
+don't need to know any of those libraries to use it. Sclap can be seamlessly used in non-Cats based or non-FP
 applications as well. It comes with:
 
 * Automatic, fully customizable usage help generation
@@ -186,7 +188,7 @@ to your `build.sbt` or
 </dependency>
 ```
 
-to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 and 3.0 coming soon (for Scala 2.11, use version 1.1.7).
+to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 (for Scala 2.11, use version 1.1.7).
 
 ### ...and a more detailed one
 
