@@ -16,6 +16,7 @@ import cats.Monoid
 import io.jobial.sclap.core.ArgumentValueParser
 import cats.implicits._
 
+import java.io.File
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
@@ -90,6 +91,15 @@ trait ArgumentValueParserInstances {
 
   implicit def optionArgumentValueParser[T: ArgumentValueParser] = new OptionArgumentValueParser[T]
 
+  implicit val fileArgumentValueParser: ArgumentValueParser[File] =
+    new ArgumentValueParser[File] {
+
+      def parse(value: String) =
+        Try(new File(value)).toEither
+
+      def empty = new File(".")
+    }
+
 }
 
 class OptionArgumentValueParser[T: ArgumentValueParser] extends ArgumentValueParser[Option[T]] {
@@ -102,4 +112,12 @@ class OptionArgumentValueParser[T: ArgumentValueParser] extends ArgumentValuePar
 abstract class ArgumentValueParserFromMonoid[T: ClassTag : Monoid] extends ArgumentValueParser[T] {
 
   val empty = Monoid[T].empty
+}
+
+class ListArgumentValueParser[T: ClassTag : ArgumentValueParser](separator: String) extends ArgumentValueParser[List[T]] {
+
+  def parse(value: String) =
+    value.split(separator).map(ArgumentValueParser[T].parse).toList.sequence
+
+  def empty = Nil
 }

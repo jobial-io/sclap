@@ -15,6 +15,7 @@ package io.jobial.sclap.core.implicits
 import cats.Show
 import io.jobial.sclap.core.ArgumentValuePrinter
 
+import java.io.File
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait ArgumentValuePrinterInstances {
@@ -31,6 +32,12 @@ trait ArgumentValuePrinterInstances {
     new ArgumentValuePrinter[FiniteDuration] {
       def print(value: FiniteDuration) = value.toString
     }
+    
+  implicit val fileArgumentValuePrinter =
+    new ArgumentValuePrinter[File] {
+      def print(value: File) =
+        value.getPath
+    }
 }
 
 class ArgumentValuePrinterFromShow[T: Show] extends ArgumentValuePrinter[T] {
@@ -38,3 +45,8 @@ class ArgumentValuePrinterFromShow[T: Show] extends ArgumentValuePrinter[T] {
   def print(value: T) = Show[T].show(value)
 }
 
+class ListArgumentValuePrinter[T: ArgumentValuePrinter](separator: String) extends ArgumentValuePrinter[List[T]] {
+
+  def print(value: List[T]) =
+    value.mkString(separator)
+}

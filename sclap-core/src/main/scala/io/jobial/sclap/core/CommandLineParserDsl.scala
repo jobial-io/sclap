@@ -149,7 +149,8 @@ abstract class ArgumentValueParser[T: ClassTag] {
   def parse(value: String): Either[Throwable, T]
 
   /**
-   * The value to use in the first parsing phase when the AST for the command line is built.
+   * The value to use in the first parsing phase when the AST for the command line is being built. This value is never 
+   * used by the application (only used internally), but has to be specified explicitly by the implementor for each type.
    */
   def empty: T
 
