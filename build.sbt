@@ -32,7 +32,7 @@ lazy val commonSettings = Seq(
   licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   description := "Scala command line apps made simple - a composable and easy-to-use CLI parser built on Cats",
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
-  scalacOptions += "-Ypartial-unification"
+  scalacOptions ++= (if (scalaBinaryVersion.value != "2.13") Seq("-Ypartial-unification") else Seq())
 )
 
 lazy val CatsVersion = "2.7.0"
