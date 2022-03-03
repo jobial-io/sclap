@@ -14,7 +14,7 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.6")
 ThisBuild / version := "1.1.7"
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
