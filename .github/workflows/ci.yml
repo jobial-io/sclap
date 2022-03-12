@@ -20,7 +20,8 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     - name: Run tests
-      run: sbt +test
+      run: |
+        sbt coverage +test coverageReport coverageAggregate
     - name: Run aws
       run: aws --version
     - name: Upload coverage to Codecov
