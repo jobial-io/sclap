@@ -84,6 +84,9 @@ trait OutputCaptureUtils {
    */
   def captureOutput[T](f: => T) = IO {
     OutputCaptureUtils.synchronized {
+      val inIntellij = Thread.currentThread().getStackTrace.find(_.getClassName.contains("org.jetbrains")).isDefined
+      if (inIntellij)
+        Thread.sleep(200)
       // Override standard out & err
       val outBuffer = new ByteArrayOutputStream
       val errBuffer = new ByteArrayOutputStream

@@ -364,7 +364,6 @@ trait PicocliCommandLineParser {
         picocliCommandLine
       }
       _ <- if (!subcommand) IO.fromTry {
-        //picocliCommandLine.getHelpFactory.create()
         picocliCommandLine.parseWithHandlers(
           new Handler().useOut(out).useErr(err).asInstanceOf[IParseResultHandler2[Try[Object]]],
           new ExceptionHandler().useOut(out).useErr(err).asInstanceOf[IExceptionHandler2[Try[Object]]],
