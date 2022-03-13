@@ -86,7 +86,7 @@ lazy val `sclap-examples` = project
       "org.scalatest" %% "scalatest" % ScalatestVersion % Test
     )
   )
-  .dependsOn(`sclap-app`, `sclap-zio`)
+  .dependsOn(`sclap-app` % "compile->compile;test->test", `sclap-zio`)
 
 lazy val `sclap-zio` = project
   .settings(commonSettings)

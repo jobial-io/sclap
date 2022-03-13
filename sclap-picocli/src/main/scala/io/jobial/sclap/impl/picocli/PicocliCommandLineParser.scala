@@ -17,8 +17,9 @@ import cats.effect.IO
 import cats.implicits._
 import cats.~>
 import io.jobial.sclap.core.{ArgumentValueParser, Logging, UsageHelpRequested, _}
+import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.Model.{OptionSpec, PositionalParamSpec, CommandSpec => PicocliCommandSpec}
-import picocli.CommandLine.{DefaultExceptionHandler, IExceptionHandler2, IParseResultHandler2, ParseResult}
+import picocli.CommandLine.{DefaultExceptionHandler, Help, IExceptionHandler2, IHelpFactory, IParseResultHandler2, ParseResult}
 import picocli.{CommandLine => PicocliCommandLine}
 
 import java.io.PrintStream
@@ -326,15 +327,23 @@ trait PicocliCommandLineParser {
     commandLine: CommandLine[A],
     args: Seq[String]
   ): IO[A] =
-    executeCommandLine(commandLine, args, System.out, System.err)
+    executeCommandLine(commandLine, args, useColors = true)
+
+  def executeCommandLine[A](
+    commandLine: CommandLine[A],
+    args: Seq[String],
+    useColors: Boolean
+  ): IO[A] =
+    executeCommandLine(commandLine, args, System.out, System.err, useColors)
 
   def executeCommandLine[A](
     commandLine: CommandLine[A],
     args: Seq[String],
     picocliOut: PrintStream,
-    picocliErr: PrintStream
+    picocliErr: PrintStream,
+    useColors: Boolean
   ): IO[A] =
-    executeCommandLine(commandLine, parse(commandLine, args), args, picocliOut, picocliErr)
+    executeCommandLine(commandLine, parse(commandLine, args), args, picocliOut, picocliErr, useColors)
 
   def executeCommandLine[A](
     commandLine: CommandLine[A],
@@ -342,13 +351,20 @@ trait PicocliCommandLineParser {
     args: Seq[String],
     out: PrintStream,
     err: PrintStream,
+    useColors: Boolean,
     subcommand: Boolean = false
   ) =
     for {
-      picocliCommandLine <- IO(
-        new PicocliCommandLine(context.picocliCommandSpec)
-      )
+      picocliCommandLine <- IO {
+        val picocliCommandLine = new PicocliCommandLine(context.picocliCommandSpec)
+        picocliCommandLine.setHelpFactory(new IHelpFactory {
+          override def create(commandSpec: PicocliCommandSpec, colorScheme: Help.ColorScheme): PicocliCommandLine.Help =
+            new PicocliCommandLine.Help(commandSpec, if (useColors) colorScheme else PicocliCommandLine.Help.defaultColorScheme(Ansi.OFF))
+        })
+        picocliCommandLine
+      }
       _ <- if (!subcommand) IO.fromTry {
+        //picocliCommandLine.getHelpFactory.create()
         picocliCommandLine.parseWithHandlers(
           new Handler().useOut(out).useErr(err).asInstanceOf[IParseResultHandler2[Try[Object]]],
           new ExceptionHandler().useOut(out).useErr(err).asInstanceOf[IExceptionHandler2[Try[Object]]],
@@ -363,7 +379,7 @@ trait PicocliCommandLineParser {
             Failure(CommandLineParsingFailed(t))
         }
       } else IO()
-      r <- commandLine.foldMap(executionCompiler(args, context, out, err)).run(CommandLineExecutionContext(context.command)).value._2.handleErrorWith {
+      r <- commandLine.foldMap(executionCompiler(args, context, out, err, useColors)).run(CommandLineExecutionContext(context.command)).value._2.handleErrorWith {
         case t: CommandLineParsingFailedForSubcommand =>
           // A subcommand failed to parse
           if (subcommand)
@@ -409,7 +425,8 @@ trait PicocliCommandLineParser {
     args: Seq[String],
     context: CommandLineParsingContext,
     picocliOut: PrintStream,
-    picocliErr: PrintStream
+    picocliErr: PrintStream,
+    useColors: Boolean
   ): CommandLineArgSpecA ~> CommandLineExecutionState =
     new (CommandLineArgSpecA ~> CommandLineExecutionState) {
 
@@ -473,7 +490,7 @@ trait PicocliCommandLineParser {
           case SubcommandWithCommandLine(subcommand, subCommandLine) =>
             State.modify[CommandLineExecutionContext](context => Option(commandSpec.subcommands.get(subcommand.name).getParseResult) match {
               case Some(parseResult) =>
-                context.copy(subcommandParsed = Some(executeCommandLine(subCommandLine, CommandLineParsingContext(context.command, commandSpec.subcommands.get(subcommand.name).getCommandSpec), args, picocliOut, picocliErr, true)))
+                context.copy(subcommandParsed = Some(executeCommandLine(subCommandLine, CommandLineParsingContext(context.command, commandSpec.subcommands.get(subcommand.name).getCommandSpec), args, picocliOut, picocliErr, useColors, subcommand = true)))
               case None =>
                 debug(s"parsing args failed for subcommand ${subcommand.name}, proceeding...")
                 context

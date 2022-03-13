@@ -3,9 +3,18 @@ package io.jobial.sclap
 import cats.effect.IO
 
 import java.io.{BufferedOutputStream, ByteArrayOutputStream, FilterOutputStream, OutputStream, PrintStream}
+import java.lang.reflect.{Field, Modifier}
+import java.security.Permission
 import scala.util.{DynamicVariable, Failure, Try}
 
 object OutputCaptureUtils {
+
+  System.setSecurityManager(new SecurityManager {
+
+    override def checkPermission(perm: Permission) = {
+      // Allow other activities by default
+    }
+  })
 
   val originalSystemOut = System.out
   val originalSystemErr = System.err
@@ -24,12 +33,16 @@ object OutputCaptureUtils {
   }
 
   def writeField(target: AnyRef, fieldName: String, value: Any) = {
-    val field = Try(target.getClass.getField(fieldName)).getOrElse{
+    val field = Try(target.getClass.getField(fieldName)).getOrElse {
       target.getClass.getDeclaredFields.find { f =>
         f.setAccessible(true)
         f.getName == fieldName
       }.get
     }
+    val modifiers = classOf[Field].getDeclaredField("modifiers");
+    modifiers.setAccessible(true);
+    modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
     field.setAccessible(true)
     field.set(target, value)
   }
@@ -37,8 +50,13 @@ object OutputCaptureUtils {
   def redirectSystemOutAndErr = {
     System.out.flush
     System.err.flush
-    writeField(Console, "outVar", new DynamicVariable[PrintStream](new PrintStream(testOut)))
-    writeField(Console, "errVar", new DynamicVariable[PrintStream](new PrintStream(testErr)))
+    try {
+      writeField(Console, "outVar", new DynamicVariable[PrintStream](new PrintStream(testOut)))
+      writeField(Console, "errVar", new DynamicVariable[PrintStream](new PrintStream(testErr)))
+    } catch {
+      case t =>
+        t.printStackTrace()
+    }
     System.setOut(new PrintStream(testOut))
     System.setErr(new PrintStream(testErr))
   }
@@ -62,61 +80,32 @@ trait OutputCaptureUtils {
   redirectSystemOutAndErr
 
   /**
-   * Capture output for a block of code. It is on a best-effort basis and should be used only in tests.
+   * Capture output for a block of code. It is done on a best-effort basis and should be used only in tests.
    */
   def captureOutput[T](f: => T) = IO {
-    // Override standard out & err
-    val outBuffer = new ByteArrayOutputStream
-    val errBuffer = new ByteArrayOutputStream
+    OutputCaptureUtils.synchronized {
+      // Override standard out & err
+      val outBuffer = new ByteArrayOutputStream
+      val errBuffer = new ByteArrayOutputStream
 
-    setSystemOutAndErr(new PrintStream(outBuffer), new PrintStream(errBuffer))
-    
-    val r = OutputCaptureUtils.synchronized {
-      Try(f).toEither
+      setSystemOutAndErr(new PrintStream(outBuffer), new PrintStream(errBuffer))
+
+      val r = Try(f).toEither
+
+      System.out.flush
+      System.err.flush
+
+      val result = OutputCaptureResult(
+        r,
+        new String(outBuffer.toByteArray),
+        new String(errBuffer.toByteArray)
+      )
+
+      // Restore global state
+      resetSystemOutAndErr
+
+      result
     }
-
-    System.out.flush
-    System.err.flush
-
-    val result = OutputCaptureResult(
-      r,
-      new String(outBuffer.toByteArray),
-      new String(errBuffer.toByteArray)
-    )
-
-    // Restore global state
-    resetSystemOutAndErr
-
-    result
-  }
-
-  val delayBeforeSwappingSysOut = 1000
-
-  def createNewInstanceOf[T <: App](o: T) =
-    createNewInstanceOfWithConstructor(o) { classOfApp =>
-      val c = classOfApp.getDeclaredConstructor()
-      c.setAccessible(true)
-      c.newInstance()
-    } orElse
-      createNewInstanceOfWithConstructor(o) { classOfApp =>
-        val c = classOfApp.getDeclaredConstructor(getClass)
-        c.setAccessible(true)
-        c.newInstance(this)
-      } recoverWith {
-      case t: Throwable =>
-        throw t
-    }
-
-  def createNewInstanceOfWithConstructor[T <: App](o: T)(const: Class[T] => T) = Try {
-    val before = System.identityHashCode(o)
-    val newO = const(o.getClass.asInstanceOf[Class[T]])
-    val after = System.identityHashCode(newO)
-    assert(after != before)
-    newO.delayedInit()
-    newO.asInstanceOf[T]
-  } recoverWith {
-    case t: Throwable =>
-      Failure(t)
   }
 }
 

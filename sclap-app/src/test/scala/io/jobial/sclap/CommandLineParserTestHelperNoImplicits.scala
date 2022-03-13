@@ -53,7 +53,7 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         val checkResult =
           for {
             result <- captureOutput {
-              executeCommandLine(spec, args.toList)
+              executeCommandLine(spec, args.toList, useColors = false)
                 .redeem(Left[Throwable, A](_), Right(_)).unsafeRunSync
             }
             r <- check.assertion(TestResult(result.result.flatMap(x => x), result.out, result.err))
