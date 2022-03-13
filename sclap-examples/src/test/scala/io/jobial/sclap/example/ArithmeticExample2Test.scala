@@ -3,13 +3,13 @@ package io.jobial.sclap.example
 import io.jobial.sclap.CommandLineParserTestHelper
 import org.scalatest.flatspec.AsyncFlatSpec
 
-class ArithmeticExampleTest extends AsyncFlatSpec
+class ArithmeticExample2Test extends AsyncFlatSpec
   with CommandLineParserTestHelper {
 
   "opt without default value test" should behave like {
-    runCommandLineTestCases(ArithmeticExample)(
+    runCommandLineTestCases(ArithmeticExample2)(
       Seq() -> failSubcommandLineParsingWith("parsing failed for subcommand div"),
-      Seq("add", "-a", "2", "-b", "3") -> succeedWithOutput("5\n")
+      Seq("add", "2", "3") -> succeedWithOutput("5\n")
     )
   }
 }

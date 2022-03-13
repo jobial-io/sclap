@@ -22,8 +22,6 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import scala.reflect.ClassTag
 import scala.util.{DynamicVariable, Failure, Success, Try}
 
-case class TestCase[T](args: Seq[String], check: TestCheck[T])
-
 sealed trait TestCheck[T] {
   def assertion: TestResult[T] => IO[Assertion]
 
@@ -77,6 +75,9 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
             IO(fail(t))
       }
     })
+
+  def succeed(out: Option[String] = None, err: Option[String] = None) =
+    succeedWith[Any]((), out, err)
 
   def succeedWithOutput(out: String, err: Option[String] = None) =
     succeedWith[Any]((), Some(out), err)
