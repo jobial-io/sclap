@@ -34,13 +34,18 @@ trait CommandLineParserDsl {
   def opt[T: ArgumentValueParser](name: String, aliases: String*) =
     Opt[T](name).aliases(aliases: _*)
 
+  /**
+   * A command line (positional) parameter.
+   *
+   * @tparam T
+   * @return
+   */
   def param[T: ArgumentValueParser] =
     Param[T]()
 
   /**
-   * Adds an existing command as a subcommand in the current command line context. More technically, it lifts 
-   * an existing command as a subcommand with the given name into the current command line context. Commands
-   * can be freely combined with each other using subcommands. Because of referential transparency and the hierarchic 
+   * Adds an existing command as a subcommand in the current command line context. Commands
+   * can be freely combined with each other using subcommand(...). Because of referential transparency and the hierarchic 
    * structure of subcommands, the same command definition can be reused or even serve both as a subcommand and as a 
    * main command in different contexts.
    *

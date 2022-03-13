@@ -14,8 +14,8 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13", "2.13.6")
-ThisBuild / version := "1.1.7"
+ThisBuild / crossScalaVersions := Seq("2.11.12")
+ThisBuild / version := "1.3.0"
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
 ThisBuild / publishArtifact in (Test, packageDoc) := true
@@ -36,6 +36,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val CatsVersion = "2.0.0"
+lazy val CatsEffectVersion = "2.5.4"
 lazy val ScalaLoggingVersion = "3.9.2"
 lazy val PicocliVersion = "4.6.1"
 lazy val ScalatestVersion = "3.2.3"
@@ -54,8 +55,8 @@ lazy val `sclap-core` = project
   .settings(
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-effect" % CatsVersion,
       "org.typelevel" %% "cats-free" % CatsVersion,
+      "org.typelevel" %% "cats-effect" % CatsEffectVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion
     )
   )
@@ -73,14 +74,19 @@ lazy val `sclap-app` = project
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % ScalatestVersion % "test"
+      "org.scalatest" %% "scalatest" % ScalatestVersion % Test
     )
   )
   .dependsOn(`sclap-picocli`)
 
 lazy val `sclap-examples` = project
   .settings(commonSettings)
-  .dependsOn(`sclap-app`, `sclap-zio`)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % ScalatestVersion % Test
+    )
+  )
+  .dependsOn(`sclap-app` % "compile->compile;test->test", `sclap-zio`)
 
 lazy val `sclap-zio` = project
   .settings(commonSettings)

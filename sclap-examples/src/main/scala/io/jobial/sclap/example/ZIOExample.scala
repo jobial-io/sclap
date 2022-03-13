@@ -20,5 +20,5 @@ object ZIOExample extends ZIOCommandLineApp {
   def run =
     for {
       hello <- opt[String]("hello")
-    } yield putStr(s"Hello $hello")
+    } yield putStrLn(s"Hello $hello")
 }

@@ -58,7 +58,7 @@ trait CommandLineParserFutureTestBase
       } yield futureForCounter(counter)
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("--hello"), checkSideEffects(counter, 1))
+      Seq("--hello") -> checkSideEffects(counter, 1)
     )
   }
 
@@ -71,12 +71,12 @@ trait CommandLineParserFutureTestBase
         a <- opt[String]("a")
       } yield fromFuture {
         counter.incrementAndGet
-        
+
         futureForCounter(counter)
       }
-    
+
     runCommandLineTestCases(spec)(
-      TestCase(Seq("--hello"), checkSideEffects(counter, 2))
+      Seq("--hello") -> checkSideEffects(counter, 2)
     )
   }
 
@@ -90,7 +90,7 @@ trait CommandLineParserFutureTestBase
       } yield futureForCounter(counter)
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("--hello"), checkSideEffects(counter, 1))
+      Seq("--hello") -> checkSideEffects(counter, 1)
     )
   }
 
@@ -111,7 +111,7 @@ trait CommandLineParserFutureTestBase
       } yield futureForCounter(counter)
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("--hello"), checkSideEffects(counter, 2))
+      Seq("--hello") -> checkSideEffects(counter, 2)
     )
   }
 }

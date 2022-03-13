@@ -1,5 +1,9 @@
 # Sclap: Scala Command Line Apps
 
+[![Continuous Integration](https://github.com/jobial-io/sclap/actions/workflows/ci.yml/badge.svg)](https://github.com/jobial-io/sclap/actions/workflows/ci.yml)
+[![Scala version support](https://index.scala-lang.org/jobial-io/sclap/sclap/latest-by-scala-version.svg?targetType=Js)](https://index.scala-lang.org/jobial-io/sclap)
+[![Codecov](https://codecov.io/gh/jobial-io/sclap/branch/master/graph/badge.svg?token=GE9PXTSXN8)](https://codecov.io/gh/jobial-io/sclap)
+
 [![sclap](doc/header.png)](https://www.urbandictionary.com/define.php?term=sclap)
 
 A simple and effective way to create feature-rich and type-safe Scala command line apps.
@@ -58,6 +62,8 @@ Finally, if you specify some options, you will see something like:
 Pinging localhost with count: Some(2), timeout: 5 seconds...
 ```
 
+[Try me on Scastie](https://scastie.scala-lang.org/79tUfSVERsKKEfjA6bkPyA) with Scala 3.1.
+
 These examples assume that you have created an alias to your Scala app or wrapped it up in a script so that
 you can execute it on the command line as `PingExample`.
 
@@ -109,7 +115,7 @@ line is still king and writing command line tools should be straightforward and 
 
 Although Sclap is built on
 **Cats**, **Cats Effect** and **Cats Free** in a purely functional style and combines best with the Cats ecosystem, you
-don't need to know any of those libraries to use it. Sclap can be used seamlessly in non-Cats based or non-FP
+don't need to know any of those libraries to use it. Sclap can be seamlessly used in non-Cats based or non-FP
 applications as well. It comes with:
 
 * Automatic, fully customizable usage help generation
@@ -171,7 +177,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.2.2"
+  "io.jobial" %% "sclap" % "1.2.3"
 )
 ```
 
@@ -182,11 +188,11 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
 </dependency>
 ```
 
-to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 and 3.0 coming soon (for Scala 2.11, use version 1.1.6).
+to `pom.xml` if you use Maven, where scala.version is either 2.12, 2.13 (for Scala 2.11, use version 1.1.7).
 
 ### ...and a more detailed one
 
