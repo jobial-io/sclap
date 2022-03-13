@@ -36,9 +36,9 @@ class CommandLineNoImplicitsTest
     }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("--a", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)"))
+      Seq() -> succeedWith(None),
+      Seq("--a", "hello") -> succeedWith(Some("hello")),
+      Seq("--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)")
     )
   }
 }

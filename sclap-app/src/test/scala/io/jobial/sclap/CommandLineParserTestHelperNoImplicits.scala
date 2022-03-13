@@ -14,14 +14,13 @@ package io.jobial.sclap
 
 import cats.effect.IO
 import cats.implicits._
-import io.jobial.sclap.core.{CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested, VersionHelpRequested}
+import io.jobial.sclap.core.{CommandLine, CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested, VersionHelpRequested}
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.{Assertion, Succeeded}
 
 import java.io.{ByteArrayOutputStream, PrintStream}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
-
+import scala.util.{DynamicVariable, Failure, Success, Try}
 
 case class TestCase[T](args: Seq[String], check: TestCheck[T])
 
@@ -43,25 +42,28 @@ case class TestFailureCheck[T](assertion: TestResult[T] => IO[Assertion]) extend
 
 case class TestResult[T](result: Either[Throwable, T], out: String, err: String)
 
-trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits {
+trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits with OutputCaptureUtils {
   this: AsyncFlatSpec =>
 
-  def runCommandLineTestCases[A](spec: CommandLineArgSpec[IO[A]])(testCases: TestCase[A]*) =
+  def runCommandLineTestCases[A](spec: CommandLineArgSpec[IO[A]])(testCases: (Seq[String], TestCheck[A])*) =
     for {
-      t <- testCases
+      (args, check) <- testCases
     } yield
-      it should s"${t.check.behave} for args: ${t.args.mkString(" ")}" in {
-        val out = new ByteArrayOutputStream
-        val err = new ByteArrayOutputStream
+      it should s"${check.behave} for args: ${args.mkString(" ")}" in {
         val checkResult =
           for {
-            result <- executeCommandLine(spec, t.args.toList, new PrintStream(out), new PrintStream(err))
-              .redeem(Left[Throwable, A](_), Right(_))
-            r <- t.check.assertion(TestResult(result, out.toString, err.toString))
+            result <- captureOutput {
+              executeCommandLine(spec, args.toList)
+                .redeem(Left[Throwable, A](_), Right(_)).unsafeRunSync
+            }
+            r <- check.assertion(TestResult(result.result.flatMap(x => x), result.out, result.err))
           } yield r
         checkResult.unsafeToFuture
       }
 
+  def runCommandLineTestCases(app: CommandLineAppNoImplicits)(testCases: (Seq[String], TestCheck[Any])*): Any =
+    runCommandLineTestCases[Any](app.run)(testCases: _*)
+  
   def succeedWith[T](result: T, out: Option[String] = None, err: Option[String] = None) =
     TestSuccessCheck({ testResult: TestResult[T] =>
       testResult.result match {
@@ -75,6 +77,9 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
             IO(fail(t))
       }
     })
+
+  def succeedWithOutput(out: String, err: Option[String] = None) =
+    succeedWith[Any]((), Some(out), err)
 
   def failWith[T](check: Throwable => Assertion, out: Option[String] = None, err: Option[String] = None) =
     TestFailureCheck[T](

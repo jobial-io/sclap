@@ -33,10 +33,10 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("-a", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("--long", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("-a"), failCommandLineParsingWith("Missing required parameter for option '--long' (PARAM)"))
+      Seq() -> succeedWith(None),
+      Seq("-a", "hello") -> succeedWith(Some("hello")),
+      Seq("--long", "hello") -> succeedWith(Some("hello")),
+      Seq("-a") -> failCommandLineParsingWith("Missing required parameter for option '--long' (PARAM)")
     )
   }
 
@@ -50,15 +50,15 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith("hello")),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)")),
-      TestCase(Seq("--a", "hi"), succeedWith("hi")),
-      TestCase(Seq("--b"), failCommandLineParsingWith("Unknown option: '--b'")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--a=PARAM] [-c=PARAM]
+      Seq() -> succeedWith("hello"),
+      Seq("--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)"),
+      Seq("--a", "hi") -> succeedWith("hi"),
+      Seq("--b") -> failCommandLineParsingWith("Unknown option: '--b'"),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--a=PARAM] [-c=PARAM]
       --a=PARAM   (default: hello).
   -c, -C=PARAM    (default: world).
   -h, --help      Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -74,19 +74,19 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(("hello", "hello", None, None))),
-      TestCase(Seq("-a", "hi"), succeedWith(("hi", "hello", None, None))),
-      TestCase(Seq("-b", "hi"), succeedWith(("hello", "hi", None, None))),
-      TestCase(Seq("-a", "hi", "-b", "hi"), succeedWith(("hi", "hi", None, None))),
-      TestCase(Seq("-c", "hi"), succeedWith(("hello", "hello", Some("hi"), None))),
-      TestCase(Seq("-d", "hi"), succeedWith(("hello", "hello", None, Some("hi")))),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [-a=PARAM] [-b=PARAM] [-c=PARAM] [-d=PARAM]
+      Seq() -> succeedWith(("hello", "hello", None, None)),
+      Seq("-a", "hi") -> succeedWith(("hi", "hello", None, None)),
+      Seq("-b", "hi") -> succeedWith(("hello", "hi", None, None)),
+      Seq("-a", "hi", "-b", "hi") -> succeedWith(("hi", "hi", None, None)),
+      Seq("-c", "hi") -> succeedWith(("hello", "hello", Some("hi"), None)),
+      Seq("-d", "hi") -> succeedWith(("hello", "hello", None, Some("hi"))),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [-a=PARAM] [-b=PARAM] [-c=PARAM] [-d=PARAM]
   -a=PARAM     This is option a (default: hello).
   -b=PARAM     This is option b (default: hello).
   -c=PARAM     This is option c.
   -d=PARAM     This is option d.
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -100,10 +100,10 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((None, "hello"))),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)")),
-      TestCase(Seq("--a", "hi"), succeedWith((Some("hi"), "hello"))),
-      TestCase(Seq("--b"), failCommandLineParsingWith("Missing required parameter for option '--b' (PARAM)"))
+      Seq() -> succeedWith((None, "hello")),
+      Seq("--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (PARAM)"),
+      Seq("--a", "hi") -> succeedWith((Some("hi"), "hello")),
+      Seq("--b") -> failCommandLineParsingWith("Missing required parameter for option '--b' (PARAM)")
     )
   }
 
@@ -118,17 +118,17 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((none[String], none[String], none[String]))),
-      TestCase(Seq("hello"), succeedWith((Some("hello"), None, None))),
-      TestCase(Seq("hello", "hi"), succeedWith((Some("hello"), Some("hi"), None))),
-      TestCase(Seq("hello", "hi", "ola"), succeedWith((Some("hello"), Some("hi"), Some("ola")))),
-      TestCase(Seq("hello", "hi", "ola", "oi"), failCommandLineParsingWith("Unmatched argument at index 3: 'oi'")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      Seq() -> succeedWith((none[String], none[String], none[String])),
+      Seq("hello") -> succeedWith((Some("hello"), None, None)),
+      Seq("hello", "hi") -> succeedWith((Some("hello"), Some("hi"), None)),
+      Seq("hello", "hi", "ola") -> succeedWith((Some("hello"), Some("hi"), Some("ola"))),
+      Seq("hello", "hi", "ola", "oi") -> failCommandLineParsingWith("Unmatched argument at index 3: 'oi'"),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
       PARAM
       PARAM1
       PARAM2   This is PARAM2.
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -143,14 +143,14 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith("xyz")),
-      TestCase(Seq("1", "2"), succeedWith("12z")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      Seq() -> succeedWith("xyz"),
+      Seq("1", "2") -> succeedWith("12z"),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
       PARAM    (default: x).
       PARAM1   (default: y).
       PARAM2   This is PARAM2 (default: z).
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -165,15 +165,15 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), failCommandLineParsingWith("Missing required parameters: 'PARAM', 'PARAM1', 'PARAM2'")),
-      TestCase(Seq("1", "2"), failCommandLineParsingWith("Missing required parameter: 'PARAM2'")),
-      TestCase(Seq("1", "2", "3"), succeedWith("123")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
+      Seq() -> failCommandLineParsingWith("Missing required parameters: 'PARAM', 'PARAM1', 'PARAM2'"),
+      Seq("1", "2") -> failCommandLineParsingWith("Missing required parameter: 'PARAM2'"),
+      Seq("1", "2", "3") -> succeedWith("123"),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] PARAM PARAM1 PARAM2
       PARAM
       PARAM1
       PARAM2   This is PARAM2.
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -187,8 +187,8 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("1", "2"), succeedWith(Some(3)))
+      Seq() -> succeedWith(None),
+      Seq("1", "2") -> succeedWith(Some(3))
     )
   }
 
@@ -202,8 +202,8 @@ class CommandLineParserTest
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("1", "2"), succeedWith(Some(3)))
+      Seq() -> succeedWith(None),
+      Seq("1", "2") -> succeedWith(Some(3))
     )
   }
 
@@ -242,40 +242,40 @@ class CommandLineParserTest
             (c, r)
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s2")),
-      TestCase(Seq("--c", "hello"), failSubcommandLineParsingWith("parsing failed for subcommand s2")),
-      TestCase(Seq("s1"), succeedWith((None, None))),
-      TestCase(Seq("s1", "--a", "hi"), succeedWith((None, Some("hi")))),
-      TestCase(Seq("--c", "hi", "s1", "--a", "hi"), succeedWith((Some("hi"), Some("hi")))),
-      TestCase(Seq("s2"), succeedWith((None, 1))),
-      TestCase(Seq("s2", "-b", "2"), succeedWith((None, 2))),
-      TestCase(Seq("--c", "hi", "s2", "-b", "3"), succeedWith((Some("hi"), 3))),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--c=PARAM] [COMMAND]
+      Seq() -> failSubcommandLineParsingWith("parsing failed for subcommand s2"),
+      Seq("--c", "hello") -> failSubcommandLineParsingWith("parsing failed for subcommand s2"),
+      Seq("s1") -> succeedWith((None, None)),
+      Seq("s1", "--a", "hi") -> succeedWith((None, Some("hi"))),
+      Seq("--c", "hi", "s1", "--a", "hi") -> succeedWith((Some("hi"), Some("hi"))),
+      Seq("s2") -> succeedWith((None, 1)),
+      Seq("s2", "-b", "2") -> succeedWith((None, 2)),
+      Seq("--c", "hi", "s2", "-b", "3") -> succeedWith((Some("hi"), 3)),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] [--c=PARAM] [COMMAND]
       --c=PARAM
   -h, --help      Show this help message and exit.
 Commands:
   s1
   s2, s3
-""")),
-      TestCase(Seq("s1", "--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest s1 [-h] [--a=PARAM]
+"""),
+      Seq("s1", "--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest s1 [-h] [--a=PARAM]
       --a=PARAM
   -h, --help      Show this help message and exit.
-""")),
-      TestCase(Seq("s2", "--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
+"""),
+      Seq("s2", "--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
   -b=PARAM     (default: 1).
   -h, --help   Show this help message and exit.
-""")),
-      TestCase(Seq("s1", "--a", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s1 failed"),
-        out = Some(""), err = Some("s1 failed"))),
-      TestCase(Seq("s2", "-b", "0"), failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s2 failed"),
-        out = Some(""), err = Some("s2 failed"))),
-      TestCase(Seq("s2", "-b", "99"), failCommandExecutionWith[IncorrectCommandLineUsageInSubcommand](t => assert(t.getMessage == "b cannot be 99"),
+"""),
+      Seq("s1", "--a", "0") -> failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s1 failed"),
+        out = Some(""), err = Some("s1 failed")),
+      Seq("s2", "-b", "0") -> failCommandExecutionWith[IllegalArgumentException](t => assert(t.getMessage == "s2 failed"),
+        out = Some(""), err = Some("s2 failed")),
+      Seq("s2", "-b", "99") -> failCommandExecutionWith[IncorrectCommandLineUsageInSubcommand](t => assert(t.getMessage == "b cannot be 99"),
         out = Some(""), err = Some("""b cannot be 99
 Usage: CommandLineParserTest s2 [-h] [-b=PARAM]
   -b=PARAM     (default: 1).
   -h, --help   Show this help message and exit.
-"""))),
-      TestCase(Seq("--c", "illegal", "s2", "-b", "1"), failCommandExecutionWith[IncorrectCommandLineUsage](t => assert(t.getMessage == "c cannot be illegal"),
+""")),
+      Seq("--c", "illegal", "s2", "-b", "1") -> failCommandExecutionWith[IncorrectCommandLineUsage](t => assert(t.getMessage == "c cannot be illegal"),
         out = Some(""), err = Some("""c cannot be illegal
 Usage: CommandLineParserTest [-h] [--c=PARAM] [COMMAND]
       --c=PARAM
@@ -285,7 +285,6 @@ Commands:
   s2, s3
 """)))
 
-    )
   }
 
   "parsing opt with standard extensions test" should behave like {
@@ -298,11 +297,11 @@ Commands:
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((None, 1))),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)")),
-      TestCase(Seq("--a", "hi"), succeedWith((Some("hi"), 1))),
-      TestCase(Seq("--a", "hi", "--b", "2"), succeedWith((Some("hi"), 2))),
-      TestCase(Seq("--c"), failCommandLineParsingWith("Unknown option: '--c'"))
+      Seq() -> succeedWith((None, 1)),
+      Seq("--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)"),
+      Seq("--a", "hi") -> succeedWith((Some("hi"), 1)),
+      Seq("--a", "hi", "--b", "2") -> succeedWith((Some("hi"), 2)),
+      Seq("--c") -> failCommandLineParsingWith("Unknown option: '--c'")
     )
   }
 
@@ -316,16 +315,16 @@ Commands:
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), failCommandLineParsingWith("Missing required options: '--a=<a>', '-b=<b>'")),
-      TestCase(Seq("-b", "x", "--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)")),
-      TestCase(Seq("-b", "x", "--a", "hi"), succeedWith("hi")),
-      TestCase(Seq("-b", "x", "--c"), failCommandLineParsingWith("Missing required option: '--a=<a>'")),
-      TestCase(Seq("-b", "x", "--a", "x", "--c"), failCommandLineParsingWith("Unknown option: '--c'")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] --a=<a> -b=<b>
+      Seq() -> failCommandLineParsingWith("Missing required options: '--a=<a>', '-b=<b>'"),
+      Seq("-b", "x", "--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)"),
+      Seq("-b", "x", "--a", "hi") -> succeedWith("hi"),
+      Seq("-b", "x", "--c") -> failCommandLineParsingWith("Missing required option: '--a=<a>'"),
+      Seq("-b", "x", "--a", "x", "--c") -> failCommandLineParsingWith("Unknown option: '--c'"),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-h] --a=<a> -b=<b>
       --a=<a>
   -b, -B=<b>
   -h, --help    Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -340,11 +339,11 @@ Commands:
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((Some("hello"), 1))),
-      TestCase(Seq("--a"), failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)")),
-      TestCase(Seq("--a", "hi"), succeedWith((Some("hi"), 1))),
-      TestCase(Seq("--a", "hi", "--b", "2"), succeedWith((Some("hi"), 2))),
-      TestCase(Seq("--c"), failCommandLineParsingWith("Unknown option: '--c'"))
+      Seq() -> succeedWith((Some("hello"), 1)),
+      Seq("--a") -> failCommandLineParsingWith("Missing required parameter for option '--a' (<a>)"),
+      Seq("--a", "hi") -> succeedWith((Some("hi"), 1)),
+      Seq("--a", "hi", "--b", "2") -> succeedWith((Some("hi"), 2)),
+      Seq("--c") -> failCommandLineParsingWith("Unknown option: '--c'")
     )
   }
 
@@ -369,22 +368,22 @@ Commands:
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s")),
-      TestCase(Seq("--c", "hello"), failCommandLineParsingWith("Unknown options: '--c', 'hello'")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with a subcommand
+      Seq() -> failSubcommandLineParsingWith("parsing failed for subcommand s"),
+      Seq("--c", "hello") -> failCommandLineParsingWith("Unknown options: '--c', 'hello'"),
+      Seq("--help") -> failWithUsageHelpRequested("""Main command with a subcommand
 Usage: CommandLineParserTest [-h] [--b=PARAM] [COMMAND]
 This is the main command.
       --b=PARAM
   -h, --help      Show this help message and exit.
 Commands:
   s  A subcommand
-""")),
-      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand
+"""),
+      Seq("s", "--help") -> failWithUsageHelpRequested("""A subcommand
 Usage: CommandLineParserTest s [-h] [--a=PARAM]
 This is a subcommand.
       --a=PARAM
   -h, --help      Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -409,22 +408,22 @@ This is a subcommand.
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), failSubcommandLineParsingWith("parsing failed for subcommand s")),
-      TestCase(Seq("--c", "hello"), failCommandLineParsingWith("Unknown options: '--c', 'hello'")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with a subcommand
+      Seq() -> failSubcommandLineParsingWith("parsing failed for subcommand s"),
+      Seq("--c", "hello") -> failCommandLineParsingWith("Unknown options: '--c', 'hello'"),
+      Seq("--help") -> failWithUsageHelpRequested("""Main command with a subcommand
 Usage: CommandLineParserTest [-h] [--b=PARAM] [COMMAND]
 This is the main command.
       --b=PARAM
   -h, --help      Show this help message and exit.
 Commands:
   s  A subcommand
-""")),
-      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand
+"""),
+      Seq("s", "--help") -> failWithUsageHelpRequested("""A subcommand
 Usage: CommandLineParserTest s [-h] [--a=PARAM]
 This is a subcommand.
       --a=PARAM
   -h, --help      Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -437,12 +436,12 @@ This is a subcommand.
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), succeedWith("hello")),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Main command with no args
+      Seq() -> succeedWith("hello"),
+      Seq("--help") -> failWithUsageHelpRequested("""Main command with no args
 Usage: CommandLineParserTest [-h]
 This is the main command.
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -459,8 +458,8 @@ This is the main command.
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), succeedWith((1, None, List()))),
-      TestCase(Seq("--a", "2", "hello"), succeedWith((2, Some("hello"), List("--a", "2", "hello"))))
+      Seq() -> succeedWith((1, None, List())),
+      Seq("--a", "2", "hello") -> succeedWith((2, Some("hello"), List("--a", "2", "hello")))
     )
   }
 
@@ -481,9 +480,9 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0)))),
-      TestCase(Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0)))),
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: CommandLineParserTest [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
+      Seq() -> succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0))),
+      Seq("-s", "", "-i", "1", "-l", "2", "-f", "1.0f", "-d", "1.0", "-g", "1 second", "-k", "2 seconds", "-j", "1.0") -> succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(1.0))),
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: CommandLineParserTest [-bh] [-d=PARAM] [-f=PARAM] [-g=PARAM] [-i=PARAM]
                              [-j=PARAM] [-k=PARAM] [-l=PARAM] [-s=PARAM]
   -b           (default: true).
   -d=PARAM     (default: 1.0).
@@ -495,7 +494,7 @@ This is the main command.
   -k=PARAM     (default: 2 seconds).
   -l=PARAM     (default: 2).
   -s=PARAM     (default: ).
-"""))
+""")
     )
   }
 
@@ -516,7 +515,7 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds", "3.0"), succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(3.0))))
+      Seq("", "true", "1", "2", "1.0", "1.0", "1 second", "2 seconds", "3.0") -> succeedWith(("", true, 1, 2, 1.0f, 1.0, 1.second, 2.seconds, BigDecimal(3.0)))
     )
   }
 
@@ -534,9 +533,9 @@ This is the main command.
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), succeedWith((1, None, List()))),
-      TestCase(Seq("-a", "2", "hello"), succeedWith((2, Some("hello"), List("-a", "2", "hello")))),
-      TestCase(Seq("--help"), failCommandLineParsingWith("Unknown option: '--help'"))
+      Seq() -> succeedWith((1, None, List())),
+      Seq("-a", "2", "hello") -> succeedWith((2, Some("hello"), List("-a", "2", "hello"))),
+      Seq("--help") -> failCommandLineParsingWith("Unknown option: '--help'")
     )
   }
 
@@ -554,18 +553,18 @@ This is the main command.
       }
 
     runCommandLineTestCases(main)(
-      TestCase(Seq(), succeedWith((1, None, List()))),
-      TestCase(Seq("-a", "2", "hello"), succeedWith((2, Some("hello"), List("-a", "2", "hello")))),
-      TestCase(Seq("-h"), failWithUsageHelpRequested("""Main command
+      Seq() -> succeedWith((1, None, List())),
+      Seq("-a", "2", "hello") -> succeedWith((2, Some("hello"), List("-a", "2", "hello"))),
+      Seq("-h") -> failWithUsageHelpRequested("""Main command
 Usage: CommandLineParserTest [-hV] [-a=PARAM] xxxx
 This is the main command.
       xxxx
   -a=PARAM        (default: 1).
   -h, --help      Show this help message and exit.
   -V, --version   Print version information and exit.
-""")),
-      TestCase(Seq("--version"), failWithVersionHelpRequested("""1.0
-"""))
+"""),
+      Seq("--version") -> failWithVersionHelpRequested("""1.0
+""")
     )
   }
 
@@ -580,9 +579,9 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((None, None, None))),
-      TestCase(Seq("-c", "-v", "-f", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz")))),
-      TestCase(Seq("-cvf", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz"))))
+      Seq() -> succeedWith((None, None, None)),
+      Seq("-c", "-v", "-f", "file.tar.gz") -> succeedWith((Some(true), Some(true), Some("file.tar.gz"))),
+      Seq("-cvf", "file.tar.gz") -> succeedWith((Some(true), Some(true), Some("file.tar.gz")))
     )
   }
 
@@ -599,9 +598,9 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith((None, None, None))),
-      TestCase(Seq("-c", "-v", "-f", "file.tar.gz"), succeedWith((Some(true), Some(true), Some("file.tar.gz")))),
-      TestCase(Seq("-cvf", "file.tar.gz"), failCommandLineParsingWith("Unknown options: '-cvf', 'file.tar.gz'"))
+      Seq() -> succeedWith((None, None, None)),
+      Seq("-c", "-v", "-f", "file.tar.gz") -> succeedWith((Some(true), Some(true), Some("file.tar.gz"))),
+      Seq("-cvf", "file.tar.gz") -> failCommandLineParsingWith("Unknown options: '-cvf', 'file.tar.gz'")
     )
   }
 
@@ -616,13 +615,13 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(None)),
-      TestCase(Seq("-a", "hello"), failCommandLineParsingWith("Unmatched arguments from index 0: '-a', 'hello'")),
-      TestCase(Seq("a", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("--long", "hello"), failCommandLineParsingWith("Unmatched arguments from index 0: '--long', 'hello'")),
-      TestCase(Seq("long", "hello"), succeedWith(Some("hello"))),
-      TestCase(Seq("a"), failCommandLineParsingWith("Missing required parameter for option 'long' (PARAM)")),
-      TestCase(Seq("-a"), failCommandLineParsingWith("Unmatched argument at index 0: '-a'"))
+      Seq() -> succeedWith(None),
+      Seq("-a", "hello") -> failCommandLineParsingWith("Unmatched arguments from index 0: '-a', 'hello'"),
+      Seq("a", "hello") -> succeedWith(Some("hello")),
+      Seq("--long", "hello") -> failCommandLineParsingWith("Unmatched arguments from index 0: '--long', 'hello'"),
+      Seq("long", "hello") -> succeedWith(Some("hello")),
+      Seq("a") -> failCommandLineParsingWith("Missing required parameter for option 'long' (PARAM)"),
+      Seq("-a") -> failCommandLineParsingWith("Unmatched argument at index 0: '-a'")
     )
   }
 
@@ -647,18 +646,18 @@ This is the main command.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq("--help"), failWithUsageHelpRequested("""Usage: main [-h] [-c=PARAM] [COMMAND]
+      Seq("--help") -> failWithUsageHelpRequested("""Usage: main [-h] [-c=PARAM] [COMMAND]
   -c=PARAM
   -h, --help   Show this help message and exit.
 Commands:
   s  A subcommand.
-""")),
-      TestCase(Seq("s", "--help"), failWithUsageHelpRequested("""A subcommand.
+"""),
+      Seq("s", "--help") -> failWithUsageHelpRequested("""A subcommand.
 Usage: main s [-h] [-a=PARAM]
 This is a subcommand.
   -a=PARAM
   -h, --help   Show this help message and exit.
-"""))
+""")
     )
   }
 
@@ -686,13 +685,13 @@ This is a subcommand.
       }
 
     runCommandLineTestCases(spec)(
-      TestCase(Seq(), succeedWith(now)),
-      TestCase(Seq("--date", "2021-01-20"), succeedWith(LocalDate.parse("2021-01-20"))),
-      TestCase(Seq("--date", "2021"), failCommandLineParsingWith("Invalid value for option '--date': cannot convert '2021' to LocalDate (java.time.format.DateTimeParseException: Text '2021' could not be parsed at index 4)")),
-      TestCase(Seq("-h"), failWithUsageHelpRequested(s"""Usage: CommandLineParserTest [-h] [--date=PARAM]
+      Seq() -> succeedWith(now),
+      Seq("--date", "2021-01-20") -> succeedWith(LocalDate.parse("2021-01-20")),
+      Seq("--date", "2021") -> failCommandLineParsingWith("Invalid value for option '--date': cannot convert '2021' to LocalDate (java.time.format.DateTimeParseException: Text '2021' could not be parsed at index 4)"),
+      Seq("-h") -> failWithUsageHelpRequested(s"""Usage: CommandLineParserTest [-h] [--date=PARAM]
       --date=PARAM   The date (default: ${now.toString}).
   -h, --help         Show this help message and exit.
-"""))
+""")
     )
   }
 

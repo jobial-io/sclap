@@ -74,13 +74,18 @@ lazy val `sclap-app` = project
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % ScalatestVersion % "test"
+      "org.scalatest" %% "scalatest" % ScalatestVersion % Test
     )
   )
   .dependsOn(`sclap-picocli`)
 
 lazy val `sclap-examples` = project
   .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % ScalatestVersion % Test
+    )
+  )
   .dependsOn(`sclap-app`, `sclap-zio`)
 
 lazy val `sclap-zio` = project
