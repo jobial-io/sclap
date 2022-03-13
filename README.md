@@ -2,6 +2,7 @@
 
 [![Continuous Integration](https://github.com/jobial-io/sclap/actions/workflows/ci.yml/badge.svg)](https://github.com/jobial-io/sclap/actions/workflows/ci.yml)
 [![Scala version support](https://index.scala-lang.org/jobial-io/sclap/sclap/latest-by-scala-version.svg?targetType=Js)](https://index.scala-lang.org/jobial-io/sclap)
+[![Codecov](https://codecov.io/gh/jobial-io/sclap/branch/master/graph/badge.svg?token=GE9PXTSXN8)](https://codecov.io/gh/jobial-io/sclap)
 
 [![sclap](doc/header.png)](https://www.urbandictionary.com/define.php?term=sclap)
 
