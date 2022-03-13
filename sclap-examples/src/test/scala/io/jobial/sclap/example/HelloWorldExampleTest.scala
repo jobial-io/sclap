@@ -7,12 +7,14 @@ class HelloWorldExampleTest extends AsyncFlatSpec
   with CommandLineParserTestHelper {
 
   "app" should behave like {
-    runCommandLineTestCases(HelloExample)(
-      Seq() -> succeedWithOutput("hello None\n"),
-      Seq("--hello", "world") -> succeedWithOutput("hello Some(world)\n"),
-      Seq("--help") -> failWithUsageHelpRequested("""Usage: HelloWorldExampleTest [-h] [--hello=PARAM]
+    runCommandLineTestCases(HelloWorldExample)(
+      Seq() -> succeedWithOutput("hello world\n"),
+      Seq("--hello", "there") -> succeedWithOutput("hello there\n"),
+      Seq("--help") -> failWithUsageHelpRequested("""Hello World
+Usage: HelloWorldExampleTest [-h] [--hello=PARAM]
+A hello world app with one option.
   -h, --help          Show this help message and exit.
-      --hello=PARAM
+      --hello=PARAM   (default: world).
 """)
     )
   }
