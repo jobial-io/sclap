@@ -36,7 +36,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val CatsVersion = "2.0.0"
-lazy val CatsEffectVersion = "2.5.4"
+lazy val CatsEffectVersion = "2.0.0"
 lazy val ScalaLoggingVersion = "3.9.2"
 lazy val PicocliVersion = "4.6.1"
 lazy val ScalatestVersion = "3.2.3"

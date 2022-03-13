@@ -1,13 +1,14 @@
 package io.jobial.sclap
 
 import cats.effect.IO
+import io.jobial.sclap.core.implicits.TryExtensionInstance
 
 import java.io.{BufferedOutputStream, ByteArrayOutputStream, FilterOutputStream, OutputStream, PrintStream}
 import java.lang.reflect.{Field, Modifier}
 import java.security.Permission
 import scala.util.{DynamicVariable, Failure, Try}
 
-object OutputCaptureUtils {
+object OutputCaptureUtils extends TryExtensionInstance {
 
   System.setSecurityManager(new SecurityManager {
 

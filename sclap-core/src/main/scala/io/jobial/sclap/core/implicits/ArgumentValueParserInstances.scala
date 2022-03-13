@@ -21,23 +21,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-trait ArgumentValueParserInstances {
-
-  /**
-   * This is only needed for Scala 2.11 compatibility.
-   *
-   * @param t
-   * @tparam T
-   */
-  implicit class TryExtension[T](t: Try[T]) {
-
-    def toEither = t match {
-      case Success(value) =>
-        Right(value)
-      case Failure(t) =>
-        Left(t)
-    }
-  }
+trait ArgumentValueParserInstances extends TryExtensionInstance {
 
   implicit val stringArgumentValueParser: ArgumentValueParserFromMonoid[String] =
     new ArgumentValueParserFromMonoid[String] {
