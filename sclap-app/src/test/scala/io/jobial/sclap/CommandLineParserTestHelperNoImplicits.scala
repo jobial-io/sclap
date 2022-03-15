@@ -62,14 +62,14 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
   def runCommandLineTestCases(app: CommandLineAppNoImplicits)(testCases: (Seq[String], TestCheck[Any])*): Any =
     runCommandLineTestCases[Any](app.run)(testCases: _*)
   
-  def succeedWith[T](result: T, out: Option[String] = None, err: Option[String] = None) =
+  def succeedWith[T](assertion: T => IO[Assertion], out: Option[String], err: Option[String]) =
     TestSuccessCheck({ testResult: TestResult[T] =>
       testResult.result match {
         case Right(r) =>
           IO(logger.debug(r.toString)) *>
             IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
             IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
-            IO(assert(result == r))
+            assertion(r)
         case Left(t) =>
           IO(logger.error("failed with:", t)) *>
             IO(fail(t))
@@ -81,6 +81,18 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
 
   def succeedWithOutput(out: String, err: Option[String] = None) =
     succeedWith[Any]((), Some(out), err)
+
+  def succeedWith(assertion: IO[Assertion]): TestSuccessCheck[Any] =
+    succeedWith({ _: Any => assertion }, None, None)
+
+  def succeedWith(assertion: IO[Assertion], out: String): TestSuccessCheck[Any] =
+    succeedWith({ _: Any => assertion }, Some(out), None)
+
+  def succeedWith(assertion: IO[Assertion], out: String, err: String): TestSuccessCheck[Any] =
+    succeedWith({ _: Any => assertion }, Some(out), Some(err))
+
+  def succeedWith[T](result: T, out: Option[String] = None, err: Option[String] = None): TestSuccessCheck[T] =
+    succeedWith(r => IO(assert(result == r)), out, err)
 
   def failWith[T](check: Throwable => Assertion, out: Option[String] = None, err: Option[String] = None) =
     TestFailureCheck[T](
