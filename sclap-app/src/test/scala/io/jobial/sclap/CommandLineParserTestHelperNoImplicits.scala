@@ -43,7 +43,7 @@ case class TestResult[T](result: Either[Throwable, T], out: String, err: String)
 trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits with OutputCaptureUtils {
   this: AsyncFlatSpec =>
 
-  def runCommandLineTest[A](spec: CommandLineArgSpec[IO[A]], args: Seq[String])(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
+  def runCommandLineTest[A](spec: CommandLineArgSpec[IO[A]], args: String*)(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
     for {
       result <- captureOutput {
         executeCommandLine(spec, args.toList, useColors = false)
@@ -52,12 +52,17 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
       r <- assertion(TestResult(result.result.flatMap(x => x), result.out, result.err))
     } yield r
 
+  def runCommandLineTest(app: CommandLineAppNoImplicits, args: String*)(assertion: TestResult[Any] => IO[Assertion]): IO[Assertion] =
+    runCommandLineTest(app.run, args: _*)(assertion)
+
+  implicit def assertionToIO(assertion: Assertion) = IO(assertion)
+
   def runCommandLineTestCases[A](spec: CommandLineArgSpec[IO[A]])(testCases: (Seq[String], TestCheck[A])*) =
     for {
       (args, check) <- testCases
     } yield
       it should s"${check.behave} for args: ${args.mkString(" ")}" in {
-        runCommandLineTest(spec, args)(check.assertion).unsafeToFuture
+        runCommandLineTest(spec, args: _*)(check.assertion).unsafeToFuture
       }
 
   def runCommandLineTestCases(app: CommandLineAppNoImplicits)(testCases: (Seq[String], TestCheck[Any])*): Any =
