@@ -43,17 +43,27 @@ case class TestResult[T](result: Either[Throwable, T], out: String, err: String)
 trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits with OutputCaptureUtils {
   this: AsyncFlatSpec =>
 
-  def runCommandLineTest[A](spec: CommandLineArgSpec[IO[A]], args: String*)(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
+  def runCommandLineTest[A](main: IO[A], args: String*)(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
     for {
       result <- captureOutput {
-        executeCommandLine(spec, args.toList, useColors = false)
-          .redeem(Left[Throwable, A](_), Right(_)).unsafeRunSync
+        main.redeem(Left[Throwable, A](_), Right(_)).unsafeRunSync
       }
       r <- assertion(TestResult(result.result.flatMap(x => x), result.out, result.err))
     } yield r
 
+  def runCommandLineTest[A](spec: CommandLineArgSpec[IO[A]], args: String*)(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
+    runCommandLineTest(executeCommandLine(spec, args.toList, useColors = false), args: _*)(assertion)
+
   def runCommandLineTest(app: CommandLineAppNoImplicits, args: String*)(assertion: TestResult[Any] => IO[Assertion]): IO[Assertion] =
     runCommandLineTest(app.run, args: _*)(assertion)
+
+  def runCommandLineTest(app: {def main(args: Array[String]): Unit}, args: String*)(assertion: TestResult[Unit] => IO[Assertion]): IO[Assertion] =
+    runCommandLineTest(
+      for {
+        app <- createNewInstanceOf(app)
+      } yield app.main(args.toArray),
+      args: _*
+    )(assertion)
 
   implicit def assertionToIO(assertion: Assertion) = IO(assertion)
 
@@ -136,4 +146,28 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
   def failSubcommandLineParsingWith[T](message: String) =
     failWithThrowable[T, CommandLineParsingFailedForSubcommand](t => assert(t.getMessage == message))
 
+  def createNewInstanceOf[T <: {def main(args: Array[String]): Unit}](o: T) =
+    createNewInstanceOfWithConstructor(o) { classOfApp =>
+      val c = classOfApp.getDeclaredConstructor()
+      c.setAccessible(true)
+      c.newInstance()
+    } orElse
+      createNewInstanceOfWithConstructor(o) { classOfApp =>
+        val c = classOfApp.getDeclaredConstructor(getClass)
+        c.setAccessible(true)
+        c.newInstance(this)
+      }
+
+  def createNewInstanceOfWithConstructor[T <: {def main(args: Array[String]): Unit}](o: T)(const: Class[T] => T) = IO {
+    val before = System.identityHashCode(o)
+    val newO = const(o.getClass.asInstanceOf[Class[T]])
+    val after = System.identityHashCode(newO)
+    assert(after != before)
+    newO match {
+      case newO: App =>
+        newO.delayedInit()
+      case _ =>
+    }
+    newO.asInstanceOf[T]
+  }
 }
