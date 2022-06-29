@@ -409,13 +409,13 @@ trait PicocliCommandLineParser {
                   err.print(t.getMessage)
                   err.println
                   err.print(picocliCommandLine.getUsageMessage)
-                } *> IO.raiseError(t)
+                } >> IO.raiseError(t)
               // If we are in the main command and incorrect command line usage is signalled in a subcommand, print nothing and propagate the exception. 
               case t: IncorrectCommandLineUsageInSubcommand =>
                 IO.raiseError(t)
               // If we are in the main command there was an exception during execution, print message to std err and propagate the exception. 
               case t =>
-                IO(err.print(t.getMessage)) *> IO.raiseError(t)
+                IO(err.print(t.getMessage)) >> (if (context.command.printStackTraceOnException) IO(err.println) >> IO(t.printStackTrace(err)) else IO()) >> IO.raiseError(t)
             }
       }
     } yield r
@@ -438,7 +438,7 @@ trait PicocliCommandLineParser {
             State.inspect(_ => result.asInstanceOf[IO[A]])
           case Args() =>
             State.inspect(_ => args.toList)
-          case Opt(name, _, _, _) =>
+           case Opt(name, _, _, _) =>
             debug(s"getting option value $name")
             State.inspect { ctx =>
               Option(commandSpec.optionsMap.get(normalizeOptName(name, ctx.command)).getValue[A])
