@@ -438,7 +438,8 @@ case class Command(
   parameterListHeading: Option[String] = None,
   optionListHeading: Option[String] = None,
   commandListHeading: Option[String] = None,
-  footerHeading: Option[String] = None
+  footerHeading: Option[String] = None,
+  printStackTraceOnException: Boolean = false
 ) {
 
   def name(value: String): Command =
@@ -482,6 +483,9 @@ case class Command(
 
   def footerHeading(value: Option[String]): Command =
     copy(footerHeading = value)
+    
+  def printStackTraceOnException(value: Boolean): Command =
+    copy(printStackTraceOnException = value)
 
   def version(value: String): Command =
     copy(version = Some(value))

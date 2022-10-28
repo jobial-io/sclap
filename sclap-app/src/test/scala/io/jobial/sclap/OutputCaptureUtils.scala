@@ -39,9 +39,11 @@ object OutputCaptureUtils {
         f.getName == fieldName
       }.get
     }
-    val modifiers = classOf[Field].getDeclaredField("modifiers");
-    modifiers.setAccessible(true);
-    modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+    Try {
+      val modifiers = classOf[Field].getDeclaredField("modifiers");
+      modifiers.setAccessible(true);
+      modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+    }
 
     field.setAccessible(true)
     field.set(target, value)
