@@ -1,20 +1,25 @@
 package io.jobial.sclap
 
 import cats.effect.IO
+import io.jobial.sclap.core.implicits.TryExtensionInstance
 
 import java.io.{BufferedOutputStream, ByteArrayOutputStream, FilterOutputStream, OutputStream, PrintStream}
 import java.lang.reflect.{Field, Modifier}
 import java.security.Permission
 import scala.util.{DynamicVariable, Failure, Try}
 
-object OutputCaptureUtils {
+object OutputCaptureUtils extends TryExtensionInstance {
 
-  System.setSecurityManager(new SecurityManager {
+  try {
+    System.setSecurityManager(new SecurityManager {
 
-    override def checkPermission(perm: Permission) = {
-      // Allow other activities by default
-    }
-  })
+      override def checkPermission(perm: Permission) = {
+        // Allow other activities by default
+      }
+    })
+  } catch {
+    case t: Throwable =>
+  }
 
   val originalSystemOut = System.out
   val originalSystemErr = System.err
@@ -32,7 +37,17 @@ object OutputCaptureUtils {
     }
   }
 
+  val consoleOut = new PrintStream(testOut)
+
+  val consoleErr = new PrintStream(testErr)
+
   def writeField(target: AnyRef, fieldName: String, value: Any) = {
+    import sun.misc.Unsafe
+    import java.lang.reflect.Field
+    val unsafeField = classOf[Unsafe].getDeclaredField("theUnsafe")
+    unsafeField.setAccessible(true)
+    
+    val unsafe = unsafeField.get(null).asInstanceOf[Unsafe]
     val field = Try(target.getClass.getField(fieldName)).getOrElse {
       target.getClass.getDeclaredFields.find { f =>
         f.setAccessible(true)
@@ -44,23 +59,32 @@ object OutputCaptureUtils {
       modifiers.setAccessible(true);
       modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     }
-
-    field.setAccessible(true)
-    field.set(target, value)
+    
+    Try {
+      field.setAccessible(true)
+      field.set(target, value)
+      val staticFieldBase = unsafe.staticFieldBase(field)
+      val staticFieldOffset = unsafe.staticFieldOffset(field)
+      unsafe.putObject(staticFieldBase, staticFieldOffset, value)
+    }
   }
 
   def redirectSystemOutAndErr = {
     System.out.flush
     System.err.flush
-    try {
-      writeField(Console, "outVar", new DynamicVariable[PrintStream](new PrintStream(testOut)))
-      writeField(Console, "errVar", new DynamicVariable[PrintStream](new PrintStream(testErr)))
-    } catch {
-      case t =>
-        t.printStackTrace()
-    }
-    System.setOut(new PrintStream(testOut))
-    System.setErr(new PrintStream(testErr))
+    System.setOut(consoleOut)
+    System.setErr(consoleErr)
+    redirectScalaOutAndErr
+  }
+  
+  def redirectScalaOutAndErr = {
+    // TODO: this only works for the current thread at the moment
+    val setOutDirect = Console.getClass.getDeclaredMethod("setOutDirect", classOf[PrintStream])
+    setOutDirect.setAccessible(true)
+    setOutDirect.invoke(Console, consoleOut)
+    val setErrDirect = Console.getClass.getDeclaredMethod("setErrDirect", classOf[PrintStream])
+    setErrDirect.setAccessible(true)
+    setErrDirect.invoke(Console, consoleErr)
   }
 
   def setSystemOutAndErr(out: OutputStream, err: OutputStream) = {
@@ -86,6 +110,7 @@ trait OutputCaptureUtils {
    */
   def captureOutput[T](f: => T) = IO {
     OutputCaptureUtils.synchronized {
+      redirectScalaOutAndErr
       val inIntellij = Thread.currentThread().getStackTrace.find(_.getClassName.contains("org.jetbrains")).isDefined
       if (inIntellij)
         Thread.sleep(200)

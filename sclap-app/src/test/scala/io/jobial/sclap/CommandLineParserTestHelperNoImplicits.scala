@@ -123,28 +123,49 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         }
       })
 
+  def failWith[T](check: Throwable => Assertion, out: String => Boolean, err: String => Boolean) =
+    TestFailureCheck[T](
+      { testResult: TestResult[T] =>
+        testResult.result match {
+          case Right(r) =>
+            IO(fail(s"expected failure, got $testResult"))
+          case Left(t) =>
+            IO(assert(out(testResult.out))) *>
+              IO(assert(err(testResult.err))) *>
+              IO(check(t))
+        }
+      })
+
   def failWithThrowable[T, X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
     failWith[T]({
       case x: X =>
         f(x)
       case x: Throwable =>
         fail(s"wrong exception is thrown: ", x)
-    }, out, err)
+    }: Throwable => Assertion, out, err)
+
+  def failWithThrowable[T, X <: Throwable : ClassTag](f: X => Assertion, out: String => Boolean, err: String => Boolean) =
+    failWith[T]({
+      case x: X =>
+        f(x)
+      case x: Throwable =>
+        fail(s"wrong exception is thrown: ", x)
+    }: Throwable => Assertion, out, err)
 
   def failCommandExecutionWith[X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
     failWithThrowable[(Option[String], Any), X](f, out, err)
 
   def failWithUsageHelpRequested[T](help: String) =
-    failWithThrowable[T, UsageHelpRequested](_ => Succeeded, out = Some(help), None)
+    failWithThrowable[T, UsageHelpRequested]({ _: Throwable => Succeeded }, out = Some(help), None)
 
   def failWithVersionHelpRequested[T](version: String) =
-    failWithThrowable[T, VersionHelpRequested](_ => Succeeded, out = Some(version), None)
+    failWithThrowable[T, VersionHelpRequested]({ _: Throwable => Succeeded }, out = Some(version), None)
 
   def failCommandLineParsingWith[T](message: String) =
-    failWithThrowable[T, CommandLineParsingFailed](t => assert(t.getMessage == message))
+    failWithThrowable[T, CommandLineParsingFailed] { t: Throwable => assert(t.getMessage == message) }
 
   def failSubcommandLineParsingWith[T](message: String) =
-    failWithThrowable[T, CommandLineParsingFailedForSubcommand](t => assert(t.getMessage == message))
+    failWithThrowable[T, CommandLineParsingFailedForSubcommand] { t: Throwable => assert(t.getMessage == message) }
 
   def createNewInstanceOf[T <: {def main(args: Array[String]): Unit}](o: T) =
     createNewInstanceOfWithConstructor(o) { classOfApp =>
