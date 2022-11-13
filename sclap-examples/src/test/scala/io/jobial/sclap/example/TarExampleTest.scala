@@ -11,7 +11,7 @@ class TarExampleTest extends AsyncFlatSpec
       Seq() -> succeedWithOutput("tar create None verbose None file None\n"),
       Seq("-f", "test") -> succeedWithOutput("tar create None verbose None file Some(test)\n"),
       Seq("--help") -> failWithUsageHelpRequested("""Tar Archive
-Usage: TarExampleTest [-chv] [-f=PARAM]
+Usage: TarExampleTest [-c] [-h] [-v] [-f=PARAM]
 This is a utility to manage tar archives.
   -c
   -f, --file=PARAM
