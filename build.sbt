@@ -45,7 +45,7 @@ lazy val CatsEffectVersion = "3.3.14"
 lazy val ScalaLoggingVersion = "3.9.5"
 lazy val PicocliVersion = "4.7.0"
 lazy val ScalatestVersion = "3.2.14"
-lazy val ZioVersion = "3.3.0-RC7+1-ddadbdf9-SNAPSHOT"
+lazy val ZioVersion = "2.0.0-RC6"
 
 lazy val root: Project = project
   .in(file("."))
@@ -97,7 +97,7 @@ lazy val `sclap-zio` = project
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-interop-cats" % ZioVersion
+      "dev.zio" %% "zio" % ZioVersion
     )
   )
   .dependsOn(`sclap-app`)
