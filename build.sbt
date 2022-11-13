@@ -19,9 +19,9 @@ ThisBuild / scalaVersion := "2.13.7"
 ThisBuild / version := "2.0.0"
 ThisBuild / scalacOptions += "-target:jvm-1.8"
 ThisBuild / javacOptions ++= Seq("-source", "11", "-target", "11")
-ThisBuild / publishArtifact in (Test, packageBin) := true
-ThisBuild / publishArtifact in (Test, packageSrc) := true
-ThisBuild / publishArtifact in (Test, packageDoc) := true
+ThisBuild / Test / packageBin / publishArtifact := true
+ThisBuild / Test / packageSrc / publishArtifact := true
+ThisBuild / Test / packageDoc / publishArtifact := true
 ThisBuild / Test / fork := true
 ThisBuild / resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
