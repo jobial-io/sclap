@@ -177,7 +177,7 @@ To use Sclap you need to add
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.jobial" %% "sclap" % "1.3.0"
+  "io.jobial" %% "sclap" % "2.0.0"
 )
 ```
 
@@ -188,11 +188,11 @@ to your `build.sbt` or
 <dependency>
     <groupId>io.jobial</groupId>
     <artifactId>sclap_${scala.version}</artifactId>
-    <version>1.3.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
-to `pom.xml` if you use Maven, where scala.version is either 2.11, 2.12, 2.13.
+to `pom.xml` if you use Maven, where scala.version is either 2.12 or 2.13. For Scala 2.11, use 1.4.0.
 
 ### ...and a more detailed one
 
