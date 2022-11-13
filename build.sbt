@@ -14,15 +14,16 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.7")
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7")
 ThisBuild / scalaVersion := "2.13.7"
-ThisBuild / version := "1.4.0"
+ThisBuild / version := "2.0.0"
 ThisBuild / scalacOptions += "-target:jvm-1.8"
 ThisBuild / javacOptions ++= Seq("-source", "11", "-target", "11")
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
 ThisBuild / publishArtifact in (Test, packageDoc) := true
 ThisBuild / Test / fork := true
+ThisBuild / resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 import sbt.Keys.{description, publishConfiguration}
 import xerial.sbt.Sonatype._
@@ -39,12 +40,12 @@ lazy val commonSettings = Seq(
   scalacOptions ++= (if (scalaBinaryVersion.value != "2.13") Seq("-Ypartial-unification") else Seq())
 )
  
-lazy val CatsVersion = "2.0.0"
-lazy val CatsEffectVersion = "2.0.0"
-lazy val ScalaLoggingVersion = "3.9.2"
-lazy val PicocliVersion = "4.6.1"
-lazy val ScalatestVersion = "3.2.3"
-lazy val ZioVersion = "2.0.0.0-RC13" // TODO: upgrade when Cats version is upgraded
+lazy val CatsVersion = "2.7.0"
+lazy val CatsEffectVersion = "3.3.14"
+lazy val ScalaLoggingVersion = "3.9.5"
+lazy val PicocliVersion = "4.7.0"
+lazy val ScalatestVersion = "3.2.14"
+lazy val ZioVersion = "3.3.0-RC7+1-ddadbdf9-SNAPSHOT"
 
 lazy val root: Project = project
   .in(file("."))

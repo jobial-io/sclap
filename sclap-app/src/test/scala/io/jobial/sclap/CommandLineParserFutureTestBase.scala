@@ -41,7 +41,7 @@ trait CommandLineParserFutureTestBase
   def futureForCounter(counter: AtomicInteger) =
     Future(counter.incrementAndGet)(fromExecutor(newCachedThreadPool))
 
-  implicit val timer = IO.timer(ExecutionContext.global)
+  //implicit val timer = IO.timer(ExecutionContext.global)
 
   def checkSideEffects(counter: AtomicInteger, sideEffectCountInSpec: Int) = TestSuccessCheck { _: TestResult[Int] =>
     IO.sleep(1.second) *>

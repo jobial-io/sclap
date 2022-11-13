@@ -29,9 +29,9 @@ class CommandLineParserFutureUnsafeImplicitTest
    * @tparam A
    * @return
    */
-  override implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) = {
+  override implicit def fromFuture[A](f: => Future[A]) = {
     // We force evaluate f here for the purposes of this test, causing the test version of fromFuture to be unsafe
     val forceEvaluated = f
-    super.fromFuture(forceEvaluated)(ec)
+    super.fromFuture(forceEvaluated)
   }
 }

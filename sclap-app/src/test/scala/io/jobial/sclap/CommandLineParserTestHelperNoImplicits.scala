@@ -12,7 +12,8 @@
  */
 package io.jobial.sclap
 
-import cats.effect.IO
+import cats.effect.unsafe.IORuntime
+import cats.effect.{IO, unsafe}
 import cats.implicits._
 import io.jobial.sclap.core.{CommandLine, CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested, VersionHelpRequested}
 import org.scalatest.flatspec.AsyncFlatSpec
@@ -42,6 +43,8 @@ case class TestResult[T](result: Either[Throwable, T], out: String, err: String)
 
 trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicits with OutputCaptureUtils {
   this: AsyncFlatSpec =>
+
+  implicit protected def runtime = IORuntime.global
 
   def runCommandLineTest[A](main: IO[A], args: String*)(assertion: TestResult[A] => IO[Assertion]): IO[Assertion] =
     for {
