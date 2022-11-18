@@ -13,10 +13,11 @@
 package io.jobial.sclap.core.implicits
 
 import cats.effect.IO
+import cats.effect.IO.raiseError
 import io.jobial.sclap.core.{CommandLineArgSpecA, NoSpec}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 
 trait CommandLineParserImplicits {
@@ -29,8 +30,26 @@ trait CommandLineParserImplicits {
   implicit def fromEither[A](e: => Either[Throwable, A]): IO[A] =
     IO().flatMap(_ => IO.fromEither(e))
 
-  implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext) =
-    IO.fromFuture(IO(f))(IO.contextShift(ec))
+  implicit def fromFuture[A](f: => Future[A])(implicit ec: ExecutionContext): IO[A] = {
+    IO(f).flatMap { f =>
+      f.value match {
+         case Some(result) =>
+          result match {
+            case Success(a) => IO.pure(a)
+            case Failure(e) => raiseError(e)
+          }
+        case _ =>
+          IO.async { cb =>
+            f.onComplete { r =>
+              cb(r match {
+                case Success(a) => Right(a)
+                case Failure(e) => Left(e)
+              })
+            }(ec)
+          }
+      }
+    }
+  }
 
   implicit def commandLineFromIO[A](result: IO[A]) = NoSpec[A](result).build
 
