@@ -98,10 +98,10 @@ abstract class ArgumentValueParserFromMonoid[T: ClassTag : Monoid] extends Argum
   val empty = Monoid[T].empty
 }
 
-class ListArgumentValueParser[T: ClassTag : ArgumentValueParser](separator: String) extends ArgumentValueParser[List[T]] {
+class ListArgumentValueParser[T: ClassTag : ArgumentValueParser](separator: String, limit: Int = -1) extends ArgumentValueParser[List[T]] {
 
   def parse(value: String) =
-    value.split(separator).map(ArgumentValueParser[T].parse).toList.sequence
+    value.split(separator, limit).map(ArgumentValueParser[T].parse).toList.sequence
 
   def empty = Nil
 }
