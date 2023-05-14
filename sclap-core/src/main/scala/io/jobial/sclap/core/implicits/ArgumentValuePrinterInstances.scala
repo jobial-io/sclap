@@ -48,5 +48,5 @@ class ArgumentValuePrinterFromShow[T: Show] extends ArgumentValuePrinter[T] {
 class ListArgumentValuePrinter[T: ArgumentValuePrinter](separator: String) extends ArgumentValuePrinter[List[T]] {
 
   def print(value: List[T]) =
-    value.mkString(separator)
+    value.map(ArgumentValuePrinter[T].print).mkString(separator)
 }
