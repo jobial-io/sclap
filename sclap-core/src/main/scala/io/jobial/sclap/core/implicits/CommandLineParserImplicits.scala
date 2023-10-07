@@ -12,10 +12,14 @@
  */
 package io.jobial.sclap.core.implicits
 
+import cats.effect.ExitCode
 import cats.effect.IO
-import io.jobial.sclap.core.{CommandLineArgSpecA, NoSpec}
+import io.jobial.sclap.core.CommandLineArgSpecA
+import io.jobial.sclap.core.HelpRequested
+import io.jobial.sclap.core.NoSpec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.util.Try
 
 
@@ -39,14 +43,19 @@ trait CommandLineParserImplicits {
   implicit def commandLineFromTry[A](result: => Try[A]) = NoSpec[A](result).build
 
   implicit def commandLineFromEither[A](result: => Either[Throwable, A]) = NoSpec[A](result).build
-  
+
   //TODO: shouldn't we have a commandLineFromAny here?
 
-  final class IOExtraOps[A](val a: IO[A]) {
+  final class SubcommandIOExtraOps[A](val a: IO[A]) {
     def orElse[B >: A](b: IO[B]) =
-      a.handleErrorWith(_ => b)
+      a.handleErrorWith {
+        case t: HelpRequested =>
+          IO.raiseError(t)
+        case _ =>
+          b
+      }
   }
 
-  implicit def ioExtraOps[A](a: IO[A]) =
-    new IOExtraOps[A](a)
+  implicit def subcommandIOExtraOps[A](a: IO[A]) =
+    new SubcommandIOExtraOps[A](a)
 }

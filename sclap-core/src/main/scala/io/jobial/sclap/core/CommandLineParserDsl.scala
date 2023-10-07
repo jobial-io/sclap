@@ -12,9 +12,10 @@
  */
 package io.jobial.sclap.core
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.free.Free._
-import io.jobial.sclap.core.implicits.ioExtraOps
+import io.jobial.sclap.core.implicits.subcommandIOExtraOps
 
 import scala.reflect.ClassTag
 
@@ -42,6 +43,9 @@ trait CommandLineParserDsl {
    */
   def param[T: ArgumentValueParser] =
     Param[T]()
+
+  def params[T: ArgumentValueParser] =
+    ParamRange[T]()
 
   /**
    * Adds an existing command as a subcommand in the current command line context. Commands
@@ -76,8 +80,11 @@ trait CommandLineParserDsl {
    * @param subcommands
    * @return
    */
-  def subcommands[A](subcommand: SubcommandWithCommandLine[A], subcommands: SubcommandWithCommandLine[_ <: A]*): CommandLine[A] =
-    subcommands.foldLeft(subcommand.build) { case (previous, s) =>
+  def subcommands[A](subcommand: SubcommandWithCommandLine[A], otherSubcommands: SubcommandWithCommandLine[_ <: A]*): CommandLine[A] =
+    subcommands[A](NonEmptyList(subcommand, otherSubcommands.toList))
+
+  def subcommands[A](subcommands: NonEmptyList[SubcommandWithCommandLine[_ <: A]]): CommandLine[A] =
+    subcommands.tail.foldLeft(subcommands.head.asInstanceOf[SubcommandWithCommandLine[A]].build) { case (previous, s) =>
       for {
         p <- previous
         q <- s.build
@@ -367,13 +374,12 @@ case class ParamWithRequiredValue[T: ArgumentValueParser](
 case class ParamRange[T: ArgumentValueParser](
   label: Option[String] = None,
   description: Option[String] = None,
-  required: Boolean,
-  fromIndex: Option[Int] = None,
+  fromIndex: Int = 0,
   toIndex: Option[Int] = None
 ) extends ParamSpec[List[T], T] {
 
   def fromIndex(value: Int): ParamRange[T] =
-    copy(fromIndex = Some(value))
+    copy(fromIndex = value)
 
   def toIndex(value: Int): ParamRange[T] =
     copy(toIndex = Some(value))
@@ -483,7 +489,7 @@ case class Command(
 
   def footerHeading(value: Option[String]): Command =
     copy(footerHeading = value)
-    
+
   def printStackTraceOnException(value: Boolean): Command =
     copy(printStackTraceOnException = value)
 
