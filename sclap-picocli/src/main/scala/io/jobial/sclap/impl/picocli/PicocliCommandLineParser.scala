@@ -231,7 +231,7 @@ trait PicocliCommandLineParser {
       def paramRangeSpecBuilder[T: ArgumentValueParser](param: ParamSpec[_, T]) = {
         val specBuilder = PositionalParamSpec.builder
           .`type`(classOf[Array[T]]).converters(typeConverterFor[T])
-          .descriptionKey(param.toString).required(false)
+          .descriptionKey(param.toString).required(true)
         param.label.map(l => specBuilder.paramLabel(l)).getOrElse(specBuilder)
         param.description.map(l => specBuilder.description(l)).getOrElse(specBuilder)
       }
@@ -507,7 +507,10 @@ trait PicocliCommandLineParser {
               commandSpec.positionalParameters.asScala.find(_.descriptionKey === descriptionKey).get.getValue[A]
             }
           case p @ ParamRange(_, _, _, _) =>
-            State.inspect(_ => commandSpec.positionalParameters.asScala.find(_.descriptionKey === System.identityHashCode(p).toString).get.getValue[A])
+            State.modify[CommandLineExecutionContext](_.incrementParamCounter).inspect { context =>
+              val descriptionKey = p.toString
+              commandSpec.positionalParameters.asScala.find(_.descriptionKey === descriptionKey).get.getValue[A]
+            }
           case PicocliOpt(o, _) =>
             debug(s"getting option value ${o.name}")
             State.inspect(_ => Option(commandSpec.optionsMap.get(o.name).getValue[A]))
