@@ -14,13 +14,16 @@ package io.jobial.sclap
 
 import cats.effect.IO
 import cats.implicits._
-import io.jobial.sclap.core.{CommandLine, CommandLineArgSpec, CommandLineParsingFailed, CommandLineParsingFailedForSubcommand, UsageHelpRequested, VersionHelpRequested}
+import io.jobial.sclap.core.CommandLineArgSpec
+import io.jobial.sclap.core.CommandLineParsingFailed
+import io.jobial.sclap.core.CommandLineParsingFailedForSubcommand
+import io.jobial.sclap.core.UsageHelpRequested
+import io.jobial.sclap.core.VersionHelpRequested
 import org.scalatest.flatspec.AsyncFlatSpec
-import org.scalatest.{Assertion, Succeeded}
+import org.scalatest.Assertion
+import org.scalatest.Succeeded
 
-import java.io.{ByteArrayOutputStream, PrintStream}
 import scala.reflect.ClassTag
-import scala.util.{DynamicVariable, Failure, Success, Try}
 
 sealed trait TestCheck[T] {
   def assertion: TestResult[T] => IO[Assertion]
@@ -110,18 +113,21 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
   def succeedWith[T](result: T, out: Option[String] = None, err: Option[String] = None): TestSuccessCheck[T] =
     succeedWith(r => IO(assert(result == r)), out, err)
 
-  def failWith[T](check: Throwable => Assertion, out: Option[String] = None, err: Option[String] = None) =
+  def failWith[T](check: Throwable => Assertion, out: String => Assertion, err: String => Assertion): TestFailureCheck[T] =
     TestFailureCheck[T](
       { testResult: TestResult[T] =>
         testResult.result match {
           case Right(r) =>
             IO(fail(s"expected failure, got $testResult"))
           case Left(t) =>
-            IO(out.map(out => assert(convertToEqualizer(out) === testResult.out))) *>
-              IO(err.map(err => assert(convertToEqualizer(err) === testResult.err))) *>
+            IO(out(testResult.out)) *>
+              IO(err(testResult.err)) *>
               IO(check(t))
         }
       })
+
+  def failWith[T](check: Throwable => Assertion, out: Option[String] = None, err: Option[String] = None): TestFailureCheck[T] =
+    failWith[T](check, { o => out.map(out => assert(convertToEqualizer(out) === o)).getOrElse(Succeeded) }: String => Assertion, { e => err.map(err => assert(convertToEqualizer(err) === e)).getOrElse(Succeeded) }: String => Assertion)
 
   def failWithThrowable[T, X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
     failWith[T]({
@@ -129,7 +135,7 @@ trait CommandLineParserTestHelperNoImplicits extends CommandLineParserNoImplicit
         f(x)
       case x: Throwable =>
         fail(s"wrong exception is thrown: ", x)
-    }, out, err)
+    }: Throwable => Assertion, out, err)
 
   def failCommandExecutionWith[X <: Throwable : ClassTag](f: X => Assertion = { _: X => Succeeded }, out: Option[String] = None, err: Option[String] = None) =
     failWithThrowable[(Option[String], Any), X](f, out, err)
