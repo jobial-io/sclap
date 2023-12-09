@@ -15,6 +15,8 @@ package io.jobial.sclap.core.implicits
 import cats.effect.ExitCode
 import cats.effect.IO
 import io.jobial.sclap.core.CommandLineArgSpecA
+import io.jobial.sclap.core.CommandLineParsingFailed
+import io.jobial.sclap.core.CommandLineParsingFailedForSubcommand
 import io.jobial.sclap.core.HelpRequested
 import io.jobial.sclap.core.NoSpec
 
@@ -49,10 +51,12 @@ trait CommandLineParserImplicits {
   final class SubcommandIOExtraOps[A](val a: IO[A]) {
     def orElse[B >: A](b: IO[B]) =
       a.handleErrorWith {
+        case t: CommandLineParsingFailedForSubcommand =>
+          b
         case t: HelpRequested =>
           IO.raiseError(t)
-        case _ =>
-          b
+        case t =>
+          IO.raiseError(t)
       }
   }
 

@@ -324,12 +324,18 @@ trait PicocliCommandLineParser {
 
   class Handler extends PicocliCommandLine.AbstractParseResultHandler[Try[ParseResult]] {
     override protected def self: Handler = this
+    
+    def usageHelpRequested(parseResult: ParseResult): Boolean =
+      parseResult.isUsageHelpRequested || parseResult.subcommands.asScala.exists(usageHelpRequested)
+
+    def versionHelpRequested(parseResult: ParseResult): Boolean =
+      parseResult.isVersionHelpRequested || parseResult.subcommands.asScala.exists(versionHelpRequested)
 
     override def handleParseResult(parseResult: ParseResult): Try[ParseResult] = {
       super.handleParseResult(parseResult)
 
-      val isUsageHelpRequested = parseResult.isUsageHelpRequested || parseResult.subcommands.asScala.exists(_.isUsageHelpRequested)
-      val isVersionHelpRequested = parseResult.isVersionHelpRequested || parseResult.subcommands.asScala.exists(_.isVersionHelpRequested)
+      val isUsageHelpRequested = usageHelpRequested(parseResult)
+      val isVersionHelpRequested = versionHelpRequested(parseResult)
 
       if (isUsageHelpRequested)
         Failure(UsageHelpRequested())
