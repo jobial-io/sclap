@@ -14,8 +14,8 @@
 name := "sclap"
 
 ThisBuild / organization := "io.jobial"
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.7")
-ThisBuild / version := "1.3.11"
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7")
+ThisBuild / version := "1.5.0"
 ThisBuild / publishArtifact in (Test, packageBin) := true
 ThisBuild / publishArtifact in (Test, packageSrc) := true
 ThisBuild / publishArtifact in (Test, packageDoc) := true
@@ -35,12 +35,12 @@ lazy val commonSettings = Seq(
   scalacOptions ++= (if (scalaBinaryVersion.value != "2.13") Seq("-Ypartial-unification") else Seq())
 )
 
-lazy val CatsVersion = "2.0.0"
-lazy val CatsEffectVersion = "2.0.0"
+lazy val CatsVersion = "2.6.1"
+lazy val CatsEffectVersion = "2.5.3"
 lazy val ScalaLoggingVersion = "3.9.2"
 lazy val PicocliVersion = "4.6.1"
 lazy val ScalatestVersion = "3.2.3"
-lazy val ZioVersion = "2.0.0.0-RC13" // TODO: upgrade when Cats version is upgraded
+lazy val ZioVersion = "2.5.1.1"
 
 lazy val root: Project = project
   .in(file("."))

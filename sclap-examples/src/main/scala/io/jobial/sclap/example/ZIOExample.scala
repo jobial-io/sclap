@@ -13,12 +13,12 @@
 package io.jobial.sclap.example
 
 import io.jobial.sclap.zio.ZIOCommandLineApp
-import zio.console._
+import zio.Console.printLine
 
 object ZIOExample extends ZIOCommandLineApp {
 
   def run =
     for {
       hello <- opt[String]("hello")
-    } yield putStrLn(s"Hello $hello")
+    } yield printLine(s"Hello $hello")
 }
