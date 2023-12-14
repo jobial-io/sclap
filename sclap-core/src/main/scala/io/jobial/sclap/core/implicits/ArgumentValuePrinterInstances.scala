@@ -22,12 +22,7 @@ trait ArgumentValuePrinterInstances {
 
   implicit def argumentValuePrinterFromShow[T: Show] =
     new ArgumentValuePrinterFromShow[T] {}
-  
-  implicit def finiteDurationArgumentValuePrinter =
-    new ArgumentValuePrinter[FiniteDuration] {
-      def print(value: FiniteDuration) = value.toString
-    }
-    
+     
   implicit val fileArgumentValuePrinter =
     new ArgumentValuePrinter[File] {
       def print(value: File) =
