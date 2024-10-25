@@ -168,7 +168,7 @@ abstract class ArgumentValueParser[T: ClassTag] {
 
   def resultTag = implicitly[ClassTag[T]]
 
-  def resultClass = resultTag.runtimeClass
+  def resultClass = resultTag.runtimeClass.asInstanceOf[Class[T]]
 }
 
 object ArgumentValueParser {

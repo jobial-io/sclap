@@ -13,13 +13,14 @@
 package io.jobial.sclap.core.implicits
 
 import cats.Monoid
-import io.jobial.sclap.core.ArgumentValueParser
 import cats.implicits._
+import io.jobial.sclap.core.ArgumentValueParser
 
 import java.io.File
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 trait ArgumentValueParserInstances extends TryExtensionInstance {
 
@@ -84,11 +85,20 @@ trait ArgumentValueParserInstances extends TryExtensionInstance {
       def empty = new File(".")
     }
 
+  implicit def enumArgumentValueParser[T <: Enum[T] : ClassTag] = new ArgumentValueParser[T] {
+
+    def parse(value: String) =
+      resultClass.getEnumConstants.find(_.name === value).toRight(new IllegalArgumentException(s"Invalid value: $value"))
+
+    def empty =
+      resultClass.getEnumConstants.headOption.getOrElse(throw new IllegalArgumentException(s"Empty enum $resultClass is not supported"))
+  }
 }
 
 class OptionArgumentValueParser[T: ArgumentValueParser] extends ArgumentValueParser[Option[T]] {
 
-  def parse(s: String) = ArgumentValueParser[T].parse(s).map(Some(_))
+  def parse(s: String) =
+    if (s.isEmpty) Right(None) else ArgumentValueParser[T].parse(s).map(Option(_))
 
   val empty = None
 }

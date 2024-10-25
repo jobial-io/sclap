@@ -16,7 +16,7 @@ import cats.Show
 import io.jobial.sclap.core.ArgumentValuePrinter
 
 import java.io.File
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.reflect.ClassTag
 
 trait ArgumentValuePrinterInstances {
 
@@ -28,6 +28,15 @@ trait ArgumentValuePrinterInstances {
       def print(value: File) =
         value.getPath
     }
+
+  implicit def optionArgumentValuePrinter[T: ArgumentValuePrinter] =
+    new ArgumentValuePrinter[Option[T]] {
+      def print(value: Option[T]) = value.map(ArgumentValuePrinter[T].print).getOrElse("")
+    }
+
+  implicit def enumArgumentValuePrinter[T <: Enum[T] : ClassTag] = new ArgumentValuePrinter[T] {
+    def print(value: T) = value.toString
+  }
 }
 
 class ArgumentValuePrinterFromShow[T: Show] extends ArgumentValuePrinter[T] {
